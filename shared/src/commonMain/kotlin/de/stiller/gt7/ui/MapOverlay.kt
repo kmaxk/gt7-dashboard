@@ -16,10 +16,10 @@ import androidx.compose.ui.unit.sp
 import de.stiller.gt7.session.Corner
 import de.stiller.gt7.session.LapSample
 
-private val Zone = Color(0x59FFFFFF)
-private val CornerNumber = TextStyle(color = Color(0xFFECEFF1), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+private val Zone = RaceColors.TextPrimary.copy(alpha = 0.35f)
+private val CornerNumber = TextStyle(color = RaceColors.TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
 private val SelectedNumber = CornerNumber.copy(color = Color.Black)
-private val DotRing = Color(0xFF101114)
+private val DotRing = RaceColors.Carbon
 
 /** The chosen corner's zone under lap A; drawn before the lap line so the line stays on top. */
 fun DrawScope.drawCornerZone(projection: MapProjection, a: List<LapSample>, corner: Corner?) {
@@ -42,7 +42,7 @@ fun DrawScope.drawMapMarks(projection: MapProjection, a: List<LapSample>, corner
         val (x, y) = projection.map(s.x, s.z)
         val selected = viewport?.selectedCorner == c
         val center = Offset(x + radius * 1.6f, y - radius * 1.6f)
-        drawCircle(if (selected) Color.White else Color(0xCC263238), radius, center)
+        drawCircle(if (selected) Color.White else RaceColors.SurfaceRaised.copy(alpha = 0.85f), radius, center)
         val t = measurer.measure("${c.number}", if (selected) SelectedNumber else CornerNumber)
         drawText(t, topLeft = Offset(center.x - t.size.width / 2f, center.y - t.size.height / 2f))
     }

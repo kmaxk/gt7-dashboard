@@ -36,14 +36,14 @@ import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
-private val Black = Color(0xFF000000)
-private val Frame = Color(0xFFDDDDDD)
-private val Dim = Color(0xFF3A3A3A)
-private val LedYellow = Color(0xFFFFD600)
-private val LampGreen = Color(0xFF1B5E20)
-private val ColdBlue = Color(0xFF00BCD4)
-private val BoxCyan = Color(0xFF29B6F6)
-private val BoxYellow = Color(0xFFFFEB3B)
+private val Black = Color.Black
+private val Frame = RaceColors.TextPrimary
+private val Dim = RaceColors.Dim
+private val LedYellow = RaceColors.LapA
+private val LampGreen = RaceColors.Gain.copy(alpha = 0.35f)
+private val ColdBlue = RaceColors.LapB
+private val BoxCyan = RaceColors.LapB
+private val BoxYellow = RaceColors.LapA
 
 /** Race display after the "Lovely Dashboard": shift lights, gear centre stage, tyres left, lap times right. */
 @Composable
@@ -208,7 +208,7 @@ private fun CenterStack(state: LiveState, unit: SpeedUnit, scale: Float, modifie
     val f = state.frame
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp * scale)) {
         Column(
-            Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(4.dp * scale)).background(Color(0xFF2B2B2B)),
+            Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(4.dp * scale)).background(RaceColors.SurfaceRaised),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {

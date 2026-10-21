@@ -29,7 +29,7 @@ import de.stiller.gt7.session.GapTrend
 import de.stiller.gt7.session.ReferenceInfo
 import de.stiller.gt7.storage.CarCatalog
 
-private val Me = Color(0xFFECEFF1)
+private val Me = RaceColors.TextPrimary
 
 /** Track [line] (x, z) with the own position [me] and the opponent's [ghost]; both projected onto the line's box. */
 @Composable

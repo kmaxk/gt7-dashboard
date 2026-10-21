@@ -163,7 +163,7 @@ private fun LinePreview(line: List<LapSample>, modifier: Modifier) {
                 val (px, py) = projection.map(s.x, s.z)
                 if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
             }
-            drawPath(path, Color(0xFFECEFF1), style = Stroke(3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+            drawPath(path, RaceColors.TextPrimary, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
             val (sx, sy) = projection.map(line.first().x, line.first().z)
             drawCircle(GoodGreen, 4.dp.toPx(), androidx.compose.ui.geometry.Offset(sx, sy))
         }

@@ -22,7 +22,7 @@ import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
-private val Selected = Color(0xFF2A2F3A)
+private val Selected = RaceColors.SurfaceRaised
 
 private fun two(n: Int) = n.toString().padStart(2, '0')
 

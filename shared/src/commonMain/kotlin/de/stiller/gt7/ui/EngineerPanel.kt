@@ -35,7 +35,7 @@ sealed interface EngineerState {
     data class Ready(val debrief: Debrief, val comparison: ComparisonLap?, val pickedTimeMs: Int?) : EngineerState
 }
 
-private val Selected = Color(0x26FFFFFF)
+private val Selected = RaceColors.SurfaceRaised
 
 /** Tips and corner table; a click on either selects the corner in the [viewport]. */
 @Composable

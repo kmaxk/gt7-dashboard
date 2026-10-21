@@ -32,6 +32,8 @@ object RaceColors {
     val Gain = Color(0xFF00E676)
     val Best = Color(0xFFB14CFF)
     val Warn = Color(0xFFFFC107)
+    /** Switched-off lamps and LEDs of the race display. */
+    val Dim = Color(0xFF3A3A3A)
     /** Faint stripes of the carbon background. */
     val CarbonWeave = Color(0x05FFFFFF)
 }

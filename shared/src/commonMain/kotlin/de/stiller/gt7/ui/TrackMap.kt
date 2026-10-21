@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import de.stiller.gt7.session.Corner
 import de.stiller.gt7.session.LapSample
 
-private val Neutral = Color(0xFF90A4AE)
+private val Neutral = RaceColors.TextMuted
 
 /**
  * Lap path; segments green where the lap gains on the reference, red where it loses (plain gray if [delta] is empty).

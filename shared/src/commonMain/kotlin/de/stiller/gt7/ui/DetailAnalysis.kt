@@ -174,7 +174,7 @@ private fun PeakList(title: String, pv: PeaksAndValleys, color: Color, modifier:
 
 private fun kmh(mps: Float) = (mps * 3.6f).roundToInt()
 
-private val BestSector = Color(0xFFB388FF)
+private val BestSector = RaceColors.Best
 
 /** Laps of the open session: time, gap to its best valid lap, Vmax, sectors (best purple), fuel and pedal shares. */
 @Composable

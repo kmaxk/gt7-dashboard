@@ -43,7 +43,7 @@ data class DriverSelection(
     val reference: ReferenceInfo?,
 )
 
-val GhostBlue = Color(0xFF4FC3F7)
+val GhostBlue = RaceColors.LapB
 private const val SELF_LABEL = "Meine Bestzeit"
 
 /** "Fahrer ▾" and "Gegner ▾" chips with menus; both menus can create a driver. */
@@ -58,7 +58,7 @@ fun DriverPicker(
     var creating by remember { mutableStateOf(false) }
     val active = selection.active
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp * scale), verticalAlignment = Alignment.CenterVertically) {
-        PickerChip("Fahrer", active?.name ?: "–", Color(0xFFECEFF1), scale) { close ->
+        PickerChip("Fahrer", active?.name ?: "–", RaceColors.TextPrimary, scale) { close ->
             selection.drivers.forEach { d ->
                 MenuEntry(d.name, d.id == active?.id) { onSelectDriver(d.id); close() }
             }
@@ -94,7 +94,7 @@ private fun PickerChip(title: String, value: String, dot: Color, scale: Float, m
     var open by remember { mutableStateOf(false) }
     Box {
         Row(
-            Modifier.clip(RoundedCornerShape(50)).background(Panel).border(1.dp, Color(0xFF2A2D34), RoundedCornerShape(50))
+            Modifier.clip(RoundedCornerShape(50)).background(Panel).border(1.dp, RaceColors.Line, RoundedCornerShape(50))
                 .clickable { open = true }.padding(horizontal = 12.dp * scale, vertical = 5.dp * scale),
             horizontalArrangement = Arrangement.spacedBy(8.dp * scale),
             verticalAlignment = Alignment.CenterVertically,

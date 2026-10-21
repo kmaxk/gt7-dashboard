@@ -55,12 +55,12 @@ data class Series(
 /** Corner markers (number, x) and the shaded x range of the chosen corner, on the chart's axis. */
 data class ChartOverlay(val markers: List<Pair<Int, Float>> = emptyList(), val shade: ClosedFloatingPointRange<Float>? = null)
 
-private val Grid = Color(0x33FFFFFF)
-private val Label = TextStyle(color = Color(0xFFB0BEC5), fontSize = 10.sp)
-private val MarkerLabel = TextStyle(color = Color(0xAAFFFFFF), fontSize = 9.sp)
-private val Marker = Color(0x40FFFFFF)
-private val Shade = Color(0x1FFFFFFF)
-private val Cursor = Color(0xCCFFFFFF)
+private val Grid = RaceColors.Line
+private val Label = TextStyle(color = RaceColors.TextMuted, fontSize = 10.sp)
+private val MarkerLabel = TextStyle(color = RaceColors.TextPrimary.copy(alpha = 0.67f), fontSize = 9.sp)
+private val Marker = RaceColors.TextPrimary.copy(alpha = 0.25f)
+private val Shade = RaceColors.TextPrimary.copy(alpha = 0.12f)
+private val Cursor = RaceColors.TextPrimary.copy(alpha = 0.8f)
 
 private val PlotLeft = 40.dp
 private val PlotRight = 8.dp
