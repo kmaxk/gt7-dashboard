@@ -19,14 +19,14 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "de.stiller.gt7.desktop.MainKt"
+        mainClass = "de.bavaco.gt7.desktop.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
             packageName = "GT7 Dashboard"
             packageVersion = "0.3.0"
             modules("java.sql")
             macOS {
-                bundleID = "de.stiller.gt7dashboard"
+                bundleID = "de.bavaco.gt7dashboard"
                 iconFile.set(project.file("icons/app-icon.icns"))
                 // macOS rejects bundle versions starting with 0; the release itself is named after packageVersion
                 packageVersion = "1.0.0"

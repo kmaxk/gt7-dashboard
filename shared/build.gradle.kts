@@ -10,7 +10,7 @@ kotlin {
     jvmToolchain(17)
     jvm("desktop")
     android {
-        namespace = "de.stiller.gt7.shared"
+        namespace = "de.bavaco.gt7.shared"
         compileSdk = 37
         minSdk = 26
         // cars.csv and maker.csv are compose resources
@@ -52,7 +52,7 @@ kotlin {
 sqldelight {
     databases {
         create("Gt7Database") {
-            packageName.set("de.stiller.gt7.db")
+            packageName.set("de.bavaco.gt7.db")
         }
     }
 }

@@ -34,31 +34,31 @@
 
 ## File Structure
 
-- `shared/src/commonMain/sqldelight/de/stiller/gt7/db/Gt7.sq` – Schema v2 (`driver`, `session.driver_id`) und neue Queries.
-- `shared/src/commonMain/sqldelight/de/stiller/gt7/db/1.sqm` – **neu**, Migration v1 → v2.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/storage/SessionRepository.kt` – Fahrer-CRUD, `bestLap` je Fahrer/Auto, `leaderboard`.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/storage/Drivers.kt` – **neu**, `Driver`, `validateDriverName`.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/session/SessionEngine.kt` – `endSession(atMs)`.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/session/SessionController.kt` – Fahrer/Gegner/Referenz.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/session/Opponent.kt` – **neu**, `Opponent`, `ReferenceInfo`.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/session/LapMath.kt` – `positionAtTime`, `gapTrend`.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/ui/ChartScale.kt` – `MapProjection`.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/ui/LiveMap.kt` – **neu**, Live-Karte + Gegnerbox.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/ui/DriverPicker.kt` – **neu**, Chips mit Menü.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/ui/LiveScreen.kt` – Layout Variante A.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/ui/LeaderboardScreen.kt` – **neu**.
-- `shared/src/commonMain/kotlin/de/stiller/gt7/ui/App.kt`, `AnalysisScreen.kt`, `AnalysisLists.kt`, `SettingsScreen.kt` – Tab, Filter, Fahrerverwaltung.
+- `shared/src/commonMain/sqldelight/de/bavaco/gt7/db/Gt7.sq` – Schema v2 (`driver`, `session.driver_id`) und neue Queries.
+- `shared/src/commonMain/sqldelight/de/bavaco/gt7/db/1.sqm` – **neu**, Migration v1 → v2.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/storage/SessionRepository.kt` – Fahrer-CRUD, `bestLap` je Fahrer/Auto, `leaderboard`.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/storage/Drivers.kt` – **neu**, `Driver`, `validateDriverName`.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/session/SessionEngine.kt` – `endSession(atMs)`.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/session/SessionController.kt` – Fahrer/Gegner/Referenz.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/session/Opponent.kt` – **neu**, `Opponent`, `ReferenceInfo`.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/session/LapMath.kt` – `positionAtTime`, `gapTrend`.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/ChartScale.kt` – `MapProjection`.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/LiveMap.kt` – **neu**, Live-Karte + Gegnerbox.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/DriverPicker.kt` – **neu**, Chips mit Menü.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/LiveScreen.kt` – Layout Variante A.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/LeaderboardScreen.kt` – **neu**.
+- `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/App.kt`, `AnalysisScreen.kt`, `AnalysisLists.kt`, `SettingsScreen.kt` – Tab, Filter, Fahrerverwaltung.
 
 ---
 
 ### Task 1: Schema v2, Migration und Fahrer im Repository
 
 **Files:**
-- Modify: `shared/src/commonMain/sqldelight/de/stiller/gt7/db/Gt7.sq`
-- Create: `shared/src/commonMain/sqldelight/de/stiller/gt7/db/1.sqm`
-- Create: `shared/src/commonMain/kotlin/de/stiller/gt7/storage/Drivers.kt`
-- Modify: `shared/src/commonMain/kotlin/de/stiller/gt7/storage/SessionRepository.kt`
-- Test: `shared/src/desktopTest/kotlin/de/stiller/gt7/storage/MigrationTest.kt` (neu), `shared/src/desktopTest/kotlin/de/stiller/gt7/storage/SessionRepositoryTest.kt`, `shared/src/commonTest/kotlin/de/stiller/gt7/storage/DriversTest.kt` (neu)
+- Modify: `shared/src/commonMain/sqldelight/de/bavaco/gt7/db/Gt7.sq`
+- Create: `shared/src/commonMain/sqldelight/de/bavaco/gt7/db/1.sqm`
+- Create: `shared/src/commonMain/kotlin/de/bavaco/gt7/storage/Drivers.kt`
+- Modify: `shared/src/commonMain/kotlin/de/bavaco/gt7/storage/SessionRepository.kt`
+- Test: `shared/src/desktopTest/kotlin/de/bavaco/gt7/storage/MigrationTest.kt` (neu), `shared/src/desktopTest/kotlin/de/bavaco/gt7/storage/SessionRepositoryTest.kt`, `shared/src/commonTest/kotlin/de/bavaco/gt7/storage/DriversTest.kt` (neu)
 
 **Interfaces:**
 - Produces:
@@ -119,8 +119,8 @@
 ### Task 3: Sitzung von außen beenden
 
 **Files:**
-- Modify: `shared/src/commonMain/kotlin/de/stiller/gt7/session/SessionEngine.kt`
-- Test: `shared/src/commonTest/kotlin/de/stiller/gt7/session/SessionEngineTest.kt`
+- Modify: `shared/src/commonMain/kotlin/de/bavaco/gt7/session/SessionEngine.kt`
+- Test: `shared/src/commonTest/kotlin/de/bavaco/gt7/session/SessionEngineTest.kt`
 
 **Interfaces:**
 - Produces: `SessionEngine.endSession(atMs: Long): List<SessionEvent>` – leer, wenn keine Sitzung läuft; sonst wie Timeout: offene (pending) Runde per Fallback abschließen, `Ended`, `live` mit `sessionActive = false, deltaMs = null, predictedLapMs = null`. Der nächste `onFrame` startet eine neue Sitzung (`Started`).
@@ -138,9 +138,9 @@
 ### Task 4: Fahrer, Gegner und Referenz im Controller
 
 **Files:**
-- Create: `shared/src/commonMain/kotlin/de/stiller/gt7/session/Opponent.kt`
-- Modify: `shared/src/commonMain/kotlin/de/stiller/gt7/session/SessionController.kt`
-- Test: `shared/src/desktopTest/kotlin/de/stiller/gt7/session/SessionControllerTest.kt`
+- Create: `shared/src/commonMain/kotlin/de/bavaco/gt7/session/Opponent.kt`
+- Modify: `shared/src/commonMain/kotlin/de/bavaco/gt7/session/SessionController.kt`
+- Test: `shared/src/desktopTest/kotlin/de/bavaco/gt7/session/SessionControllerTest.kt`
 
 **Interfaces:**
 - Consumes: Task 1–3.
@@ -173,7 +173,7 @@
 ### Task 5: Geisterposition, Trend und Kartenprojektion
 
 **Files:**
-- Modify: `shared/src/commonMain/kotlin/de/stiller/gt7/session/LapMath.kt`, `shared/src/commonMain/kotlin/de/stiller/gt7/ui/ChartScale.kt`, `shared/src/commonMain/kotlin/de/stiller/gt7/ui/TrackMap.kt`
+- Modify: `shared/src/commonMain/kotlin/de/bavaco/gt7/session/LapMath.kt`, `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/ChartScale.kt`, `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/TrackMap.kt`
 - Test: `LapMathTest.kt`, `ChartScaleTest.kt`
 
 **Interfaces:**
@@ -195,9 +195,9 @@
 ### Task 6: Live-Tab Variante A
 
 **Files:**
-- Create: `shared/src/commonMain/kotlin/de/stiller/gt7/ui/LiveMap.kt`, `shared/src/commonMain/kotlin/de/stiller/gt7/ui/DriverPicker.kt`
-- Modify: `shared/src/commonMain/kotlin/de/stiller/gt7/ui/LiveScreen.kt`, `shared/src/commonMain/kotlin/de/stiller/gt7/ui/App.kt`
-- Test: `shared/src/commonTest/kotlin/de/stiller/gt7/ui/LiveLabelsTest.kt` (neu)
+- Create: `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/LiveMap.kt`, `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/DriverPicker.kt`
+- Modify: `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/LiveScreen.kt`, `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/App.kt`
+- Test: `shared/src/commonTest/kotlin/de/bavaco/gt7/ui/LiveLabelsTest.kt` (neu)
 
 **Interfaces:**
 - Consumes: Task 4 (Controller-Flows/-Aktionen), Task 5 (`positionAtTime`, `gapTrend`, `MapProjection`), `CarCatalog` für Autonamen.
@@ -221,9 +221,9 @@
 ### Task 7: Bestenliste, Analyse-Filter, Fahrerverwaltung
 
 **Files:**
-- Create: `shared/src/commonMain/kotlin/de/stiller/gt7/ui/LeaderboardScreen.kt`
+- Create: `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/LeaderboardScreen.kt`
 - Modify: `App.kt` (Tabs `Live`, `Analyse`, `Bestenliste`, `Einstellungen`), `AnalysisScreen.kt`, `AnalysisLists.kt`, `SettingsScreen.kt`
-- Test: `shared/src/commonTest/kotlin/de/stiller/gt7/ui/LeaderboardRowsTest.kt` (neu)
+- Test: `shared/src/commonTest/kotlin/de/bavaco/gt7/ui/LeaderboardRowsTest.kt` (neu)
 
 **Interfaces:**
 - Consumes: Task 2 (`leaderboard`, `carsOnTrack`, `SessionSummary.driverName`), Task 4 (Controller-Aktionen für Fahrer).

@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Alle Logik und UI in `shared/src/commonMain`; `desktopMain` enthält nur SQLDelight-Treiber + App-Datenverzeichnis (`expect/actual`).
-- Paketname-Basis: `de.stiller.gt7`.
+- Paketname-Basis: `de.bavaco.gt7`.
 - UDP: Heartbeat `"A"` an PS5-Port **33739**, Empfang auf **33740**, Heartbeat sofort und alle **10 s**.
 - Salsa20-Key: erste 32 Bytes von `"Simulator Interface Packet GT7 ver 0.0"`; IV1 = u32 LE an `0x40` des *verschlüsselten* Pakets; IV2 = IV1 xor `0xDEADBEAF`; Nonce = IV2 (LE) ‖ IV1 (LE).
 - Gültiges Paket: Länge **296**, Magic `0x47375330` (u32 LE an Offset 0 nach Entschlüsselung).
@@ -38,7 +38,7 @@
 ```
 settings.gradle.kts, build.gradle.kts, gradle.properties, gradle/libs.versions.toml, gradlew
 shared/build.gradle.kts
-shared/src/commonMain/kotlin/de/stiller/gt7/
+shared/src/commonMain/kotlin/de/bavaco/gt7/
   telemetry/Salsa20.kt            Salsa20/20 Keystream + xor
   telemetry/TelemetryFrame.kt     data classes TelemetryFrame, Wheels, Flags
   telemetry/PacketDecoder.kt      decode(ByteArray): TelemetryFrame?
@@ -58,13 +58,13 @@ shared/src/commonMain/kotlin/de/stiller/gt7/
   storage/Platform.kt             expect fun createDriver(); expect fun appDataDir()
   ui/App.kt, ui/Theme.kt, ui/LiveScreen.kt, ui/AnalysisScreen.kt, ui/Charts.kt,
   ui/TrackMap.kt, ui/SettingsScreen.kt, ui/TrackDialog.kt, ui/Format.kt
-shared/src/commonMain/sqldelight/de/stiller/gt7/db/Gt7.sq
+shared/src/commonMain/sqldelight/de/bavaco/gt7/db/Gt7.sq
 shared/src/commonMain/composeResources/files/cars.csv
-shared/src/desktopMain/kotlin/de/stiller/gt7/storage/Platform.desktop.kt
-shared/src/commonTest/kotlin/de/stiller/gt7/...   (Tests je Paket)
-shared/src/desktopTest/kotlin/de/stiller/gt7/...  (UDP- und DB-Tests, JVM)
+shared/src/desktopMain/kotlin/de/bavaco/gt7/storage/Platform.desktop.kt
+shared/src/commonTest/kotlin/de/bavaco/gt7/...   (Tests je Paket)
+shared/src/desktopTest/kotlin/de/bavaco/gt7/...  (UDP- und DB-Tests, JVM)
 desktopApp/build.gradle.kts
-desktopApp/src/main/kotlin/de/stiller/gt7/desktop/Main.kt
+desktopApp/src/main/kotlin/de/bavaco/gt7/desktop/Main.kt
 ```
 
 ---
@@ -73,15 +73,15 @@ desktopApp/src/main/kotlin/de/stiller/gt7/desktop/Main.kt
 
 **Files:**
 - Create: `settings.gradle.kts`, `build.gradle.kts`, `gradle.properties`, `gradle/libs.versions.toml`, Gradle-Wrapper
-- Create: `shared/build.gradle.kts`, `shared/src/commonMain/kotlin/de/stiller/gt7/ui/App.kt`, `shared/src/commonTest/kotlin/de/stiller/gt7/SmokeTest.kt`
-- Create: `desktopApp/build.gradle.kts`, `desktopApp/src/main/kotlin/de/stiller/gt7/desktop/Main.kt`
+- Create: `shared/build.gradle.kts`, `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/App.kt`, `shared/src/commonTest/kotlin/de/bavaco/gt7/SmokeTest.kt`
+- Create: `desktopApp/build.gradle.kts`, `desktopApp/src/main/kotlin/de/bavaco/gt7/desktop/Main.kt`
 
 **Interfaces:**
-- Produces: `@Composable fun App()` in `de.stiller.gt7.ui`; Gradle-Tasks `:shared:desktopTest`, `:desktopApp:run`.
+- Produces: `@Composable fun App()` in `de.bavaco.gt7.ui`; Gradle-Tasks `:shared:desktopTest`, `:desktopApp:run`.
 
 - [ ] **Step 1: Wrapper erzeugen:** `gradle wrapper --gradle-version 9.2.0`
 - [ ] **Step 2: Version Catalog** mit den Versionen aus *Tech Stack*; Plugins: `kotlin-multiplatform`, `kotlin-jvm`, `compose-compiler` (`org.jetbrains.kotlin.plugin.compose`, gleiche Kotlin-Version), `compose-multiplatform` (`org.jetbrains.compose`), `sqldelight` (`app.cash.sqldelight`). Libraries: `ktor-network`, `kotlinx-coroutines-core`, `kotlinx-coroutines-test`, `kotlinx-coroutines-swing`, `kotlinx-io-core`, `sqldelight-sqlite-driver`, `sqldelight-coroutines-extensions`.
-- [ ] **Step 3: `shared`** – KMP mit Target `jvm("desktop")`, Compose über Plugin-Accessors (`compose.runtime`, `compose.foundation`, `compose.material3`, `compose.components.resources`), SQLDelight-DB `Gt7Database`, Paket `de.stiller.gt7.db`. `desktopApp` – `kotlin("jvm")` + Compose, `compose.desktop { application { mainClass = "de.stiller.gt7.desktop.MainKt"; nativeDistributions { targetFormats(Dmg); packageName = "GT7 Dashboard"; packageVersion = "1.0.0" } } }`.
+- [ ] **Step 3: `shared`** – KMP mit Target `jvm("desktop")`, Compose über Plugin-Accessors (`compose.runtime`, `compose.foundation`, `compose.material3`, `compose.components.resources`), SQLDelight-DB `Gt7Database`, Paket `de.bavaco.gt7.db`. `desktopApp` – `kotlin("jvm")` + Compose, `compose.desktop { application { mainClass = "de.bavaco.gt7.desktop.MainKt"; nativeDistributions { targetFormats(Dmg); packageName = "GT7 Dashboard"; packageVersion = "1.0.0" } } }`.
 - [ ] **Step 4: Smoke-Test** `SmokeTest.runs()` mit `assertEquals(2, 1 + 1)`; `App()` zeigt `Text("GT7 Dashboard")`; `Main.kt` öffnet `Window(title = "GT7 Dashboard")` mit `App()`.
 - [ ] **Step 5: Verifizieren:** `./gradlew :shared:desktopTest :desktopApp:compileKotlin` → BUILD SUCCESSFUL. Wenn eine Version nicht auflösbar ist: nächsthöhere verfügbare Patch-Version derselben Linie nehmen und im Catalog dokumentieren. `./gradlew :desktopApp:run` öffnet ein Fenster (manuell prüfen, dann schließen).
 - [ ] **Step 6: Commit** `chore: scaffold KMP project with desktop app`
@@ -91,8 +91,8 @@ desktopApp/src/main/kotlin/de/stiller/gt7/desktop/Main.kt
 ### Task 2: Salsa20
 
 **Files:**
-- Create: `shared/src/commonMain/kotlin/de/stiller/gt7/telemetry/Salsa20.kt`
-- Test: `shared/src/commonTest/kotlin/de/stiller/gt7/telemetry/Salsa20Test.kt`
+- Create: `shared/src/commonMain/kotlin/de/bavaco/gt7/telemetry/Salsa20.kt`
+- Test: `shared/src/commonTest/kotlin/de/bavaco/gt7/telemetry/Salsa20Test.kt`
 
 **Interfaces:**
 - Produces: `object Salsa20 { fun xor(key: ByteArray /*32*/, nonce: ByteArray /*8*/, data: ByteArray): ByteArray }` (Zähler startet bei 0, 20 Runden).
@@ -109,7 +109,7 @@ desktopApp/src/main/kotlin/de/stiller/gt7/desktop/Main.kt
 
 **Files:**
 - Create: `telemetry/TelemetryFrame.kt`, `telemetry/PacketDecoder.kt`
-- Test: `shared/src/commonTest/kotlin/de/stiller/gt7/telemetry/PacketDecoderTest.kt`, `.../telemetry/TestPackets.kt` (Test-Helfer)
+- Test: `shared/src/commonTest/kotlin/de/bavaco/gt7/telemetry/PacketDecoderTest.kt`, `.../telemetry/TestPackets.kt` (Test-Helfer)
 
 **Interfaces:**
 - Consumes: `Salsa20.xor`
@@ -172,7 +172,7 @@ desktopApp/src/main/kotlin/de/stiller/gt7/desktop/Main.kt
 
 **Files:**
 - Create: `telemetry/UdpTelemetrySource.kt`, `telemetry/Discovery.kt`
-- Test: `shared/src/desktopTest/kotlin/de/stiller/gt7/telemetry/UdpTelemetrySourceTest.kt`
+- Test: `shared/src/desktopTest/kotlin/de/bavaco/gt7/telemetry/UdpTelemetrySourceTest.kt`
 
 **Interfaces:**
 - Consumes: `TelemetrySource`, `RawPacket`, `PacketDecoder`
@@ -309,7 +309,7 @@ desktopApp/src/main/kotlin/de/stiller/gt7/desktop/Main.kt
 ### Task 9: Persistenz (SQLDelight, Repository, CarCatalog)
 
 **Files:**
-- Create: `shared/src/commonMain/sqldelight/de/stiller/gt7/db/Gt7.sq`, `storage/SessionRepository.kt`, `storage/CarCatalog.kt`, `storage/Platform.kt`, `desktopMain/.../storage/Platform.desktop.kt`
+- Create: `shared/src/commonMain/sqldelight/de/bavaco/gt7/db/Gt7.sq`, `storage/SessionRepository.kt`, `storage/CarCatalog.kt`, `storage/Platform.kt`, `desktopMain/.../storage/Platform.desktop.kt`
 - Create: `shared/src/commonMain/composeResources/files/cars.csv`
 - Test: `desktopTest/.../storage/SessionRepositoryTest.kt`, `commonTest/.../storage/CarCatalogTest.kt`
 
@@ -463,7 +463,7 @@ desktopApp/src/main/kotlin/de/stiller/gt7/desktop/Main.kt
 ### Task 14: macOS-Paket + Test an der PS5
 
 **Files:**
-- Modify: `desktopApp/build.gradle.kts` (`macOS { bundleID = "de.stiller.gt7dashboard"; iconFile }` optional), `README.md` erstellen (Start, PS5-Setup, Mitschnitt)
+- Modify: `desktopApp/build.gradle.kts` (`macOS { bundleID = "de.bavaco.gt7dashboard"; iconFile }` optional), `README.md` erstellen (Start, PS5-Setup, Mitschnitt)
 
 - [ ] **Step 1:** `./gradlew :shared:desktopTest` → alle Tests PASS.
 - [ ] **Step 2:** `./gradlew :desktopApp:packageDmg` → DMG unter `desktopApp/build/compose/binaries/main/dmg/`.

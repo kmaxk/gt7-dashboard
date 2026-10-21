@@ -12,7 +12,7 @@ kotlin {
 val keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
 
 android {
-    namespace = "de.stiller.gt7dashboard"
+    namespace = "de.bavaco.gt7dashboard"
     compileSdk = 37
 
     if (keystoreFile != null) {
@@ -26,7 +26,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "de.stiller.gt7dashboard"
+        applicationId = "de.bavaco.gt7dashboard"
         minSdk = 26
         targetSdk = 36
         versionName = providers.gradleProperty("versionName").getOrElse("0.3.0")

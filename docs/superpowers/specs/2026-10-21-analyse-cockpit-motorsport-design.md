@@ -114,7 +114,7 @@ Tests:
 - `costliestCorners`: nur Kurven mit Verlust, Sortierung, weniger als drei verlustreiche Kurven.
 - `lossBarFraction`: relative Länge, Gewinne, alle null.
 - `cockpitHeader`: drei Fälle (B gewählt, automatische Vergleichsrunde, kein Vergleich), Theoretisch mit und ohne Sektoren.
-- Farben: ein Test durchsucht `shared/src/commonMain/kotlin/de/stiller/gt7/ui/*.kt` außer `Theme.kt` nach `Color(0x` und erwartet keinen Treffer.
+- Farben: ein Test durchsucht `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/*.kt` außer `Theme.kt` nach `Color(0x` und erwartet keinen Treffer.
 - Bestehende Tests bleiben grün.
 - Sichtprüfung: Screenshots über `ReadmeScreenshots` neu rendern (Analyse, Live, Renn-Display, Sitzungen), ansehen, README-Bilder ersetzen.
 - Von Hand (Nutzer): Pfeiltasten und Aufklappen in der laufenden App.

@@ -18,7 +18,7 @@ Nicht-Ziele: Hochformat, Google Play Store, iOS, Wear OS, Benachrichtigungen ode
 
 - `shared` bekommt neben `jvm("desktop")` ein Android-Target (minSdk 26, compileSdk 36, JVM-Toolchain 17). Mit Gradle 9.2 / Kotlin 2.4 wird das zum Stand passende Android Gradle Plugin verwendet; bei AGP 9 über das Plugin `com.android.kotlin.multiplatform.library`. Die genauen Versionen legt der Plan nach einem Probe-Build fest.
 - Neues Modul `:androidApp` (Application-Plugin): `Gt7Application` initialisiert die Plattformschicht in `onCreate()` (auch nach einem Prozess-Neustart vor allem anderen); `MainActivity` (ComponentActivity) ruft `App(...)` aus `shared` auf; Abhängigkeiten werden wie in `desktopApp/Main.kt` erzeugt (Repository, Controller, DataTransfer, Autokatalog).
-- `applicationId` `de.stiller.gt7dashboard`, `versionName` = Release-Version, `versionCode` fortlaufend.
+- `applicationId` `de.bavaco.gt7dashboard`, `versionName` = Release-Version, `versionCode` fortlaufend.
 - App-Icon aus `desktopApp/icons/app-icon.svg` als adaptives Icon.
 
 ## Plattformschicht (`androidMain`)

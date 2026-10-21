@@ -29,5 +29,5 @@ nohup "$JAVA_HOME/bin/java" \
     -Dcompose.application.configure.swing.globals=true \
     "-Xdock:name=GT7 Dashboard" \
     "-Xdock:icon=$APP/../Resources/GT7 Dashboard.icns" \
-    -cp "$CP" de.stiller.gt7.desktop.MainKt >"$LOG" 2>&1 &
+    -cp "$CP" de.bavaco.gt7.desktop.MainKt >"$LOG" 2>&1 &
 echo "GT7 Dashboard läuft (Java: $JAVA_HOME). Dieses Fenster kann geschlossen werden."

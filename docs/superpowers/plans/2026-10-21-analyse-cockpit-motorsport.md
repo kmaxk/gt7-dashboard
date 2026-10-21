@@ -14,7 +14,7 @@
 
 - Schrift: Barlow Condensed (SIL OFL 1.1), Schnitte Regular, Medium, SemiBold, Bold, in `shared/src/commonMain/composeResources/font/`, `OFL.txt` daneben.
 - Farben exakt: Carbon `#0A0A0A`, Surface `#141414`, SurfaceRaised `#1F1F1F`, Line `#262626`, TextPrimary `#F2F2F2`, TextMuted `#9A9A9A`, Accent `#E10600`, LapA `#FFD400`, LapB `#00D2FF`, Loss `#E10600`, Gain `#00E676`, Best `#B14CFF`, Warn `#FFC107`.
-- Außerhalb von `ui/Theme.kt` kein `Color(0x` in `shared/src/commonMain/kotlin/de/stiller/gt7/ui/`.
+- Außerhalb von `ui/Theme.kt` kein `Color(0x` in `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/`.
 - Zahlen mit festen Ziffern: `fontFeatureSettings = "tnum"`.
 - Kurvenmarken heißen „T1“ … „Tn“.
 - Texte der App bleiben deutsch; nur Fahrtipps folgen `TipLanguage`.
@@ -34,8 +34,8 @@
 
 **Files:**
 - Create: `shared/src/commonMain/composeResources/font/barlow_condensed_{regular,medium,semibold,bold}.ttf`, `shared/src/commonMain/composeResources/font/OFL.txt` (Download aus `github.com/google/fonts/ofl/barlowcondensed/`)
-- Modify: `shared/src/commonMain/kotlin/de/stiller/gt7/ui/Theme.kt`
-- Test: `shared/src/commonTest/kotlin/de/stiller/gt7/ui/ThemeTest.kt`
+- Modify: `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/Theme.kt`
+- Test: `shared/src/commonTest/kotlin/de/bavaco/gt7/ui/ThemeTest.kt`
 
 **Interfaces:**
 - Produces: `object RaceColors { val Carbon, Surface, SurfaceRaised, Line, TextPrimary, TextMuted, Accent, LapA, LapB, Loss, Gain, Best, Warn: Color }`; `fun raceColorScheme(): ColorScheme`; `@Composable fun raceFontFamily(): FontFamily`; `fun digits(size: TextUnit, family: FontFamily = FontFamily.Default): TextStyle` (Bold, `tnum`); `Gt7Theme` setzt colorScheme, Typography (alle Stile mit Barlow), Shapes (Ecken 2 dp) und einen Carbon-Hintergrund mit diagonaler Textur über `Modifier.carbon()`.
@@ -51,12 +51,12 @@
 
 **Files:**
 - Modify: alle Dateien unter `ui/` mit `Color(0x` außer `Theme.kt` (RaceDisplay, Charts, MapOverlay, DriverPicker, AnalysisLists, TracksScreen, TrackMap, LiveMap, EngineerPanel, DetailAnalysis)
-- Test: `shared/src/desktopTest/kotlin/de/stiller/gt7/ui/NoColorLiteralsTest.kt`
+- Test: `shared/src/desktopTest/kotlin/de/bavaco/gt7/ui/NoColorLiteralsTest.kt`
 
 **Interfaces:**
 - Consumes: `RaceColors` (Task 1).
 
-- [ ] **Step 1:** Test `noColorLiteralsOutsideTheTheme`: liest alle `*.kt` in `src/commonMain/kotlin/de/stiller/gt7/ui/` (Arbeitsverzeichnis des Tests ist `shared/`), ignoriert `Theme.kt`, erwartet leere Liste der Dateien mit `Color(0x`; Fehlermeldung nennt Datei:Zeile.
+- [ ] **Step 1:** Test `noColorLiteralsOutsideTheTheme`: liest alle `*.kt` in `src/commonMain/kotlin/de/bavaco/gt7/ui/` (Arbeitsverzeichnis des Tests ist `shared/`), ignoriert `Theme.kt`, erwartet leere Liste der Dateien mit `Color(0x`; Fehlermeldung nennt Datei:Zeile.
 - [ ] **Step 2:** Test läuft rot und listet die Fundstellen.
 - [ ] **Step 3:** Jede Fundstelle auf den passenden `RaceColors`-Namen umstellen (halbtransparente Werte als `RaceColors.X.copy(alpha = …)`); Werte ohne passenden Namen sind Grau-/Weißtöne → `TextPrimary`, `TextMuted`, `Line` oder `SurfaceRaised`.
 - [ ] **Step 4:** Test grün, alle Tests grün.
@@ -65,7 +65,7 @@
 ### Task 3: Bausteine RaceStyle
 
 **Files:**
-- Create: `shared/src/commonMain/kotlin/de/stiller/gt7/ui/RaceStyle.kt`
+- Create: `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/RaceStyle.kt`
 
 **Interfaces:**
 - Produces: `@Composable fun RaceCard(modifier: Modifier = Modifier, accent: Color? = RaceColors.Accent, content: @Composable ColumnScope.() -> Unit)` (Surface-Fläche, 3 dp Kante links, Ecken 2 dp, Innenabstand 8×10 dp); `@Composable fun RaceLabel(text: String, modifier: Modifier = Modifier, color: Color = RaceColors.TextMuted)` (Großbuchstaben, 10 sp, SemiBold, letterSpacing 0.14 em); `@Composable fun RaceNumber(text: String, color: Color = RaceColors.TextPrimary, size: TextUnit = 22.sp, modifier: Modifier = Modifier)` (über `digits`).
@@ -77,8 +77,8 @@
 ### Task 4: Kurvenliste – Logik
 
 **Files:**
-- Create: `shared/src/commonMain/kotlin/de/stiller/gt7/ui/CornerList.kt` (Logik-Teil)
-- Test: `shared/src/commonTest/kotlin/de/stiller/gt7/ui/CornerListTest.kt`
+- Create: `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/CornerList.kt` (Logik-Teil)
+- Test: `shared/src/commonTest/kotlin/de/bavaco/gt7/ui/CornerListTest.kt`
 
 **Interfaces:**
 - Consumes: `Corner`, `CornerReport` (session/Engineer.kt).
@@ -96,8 +96,8 @@
 ### Task 5: Kopfzeile – Logik
 
 **Files:**
-- Create: `shared/src/commonMain/kotlin/de/stiller/gt7/ui/CockpitHeader.kt`
-- Test: `shared/src/commonTest/kotlin/de/stiller/gt7/ui/CockpitHeaderTest.kt`
+- Create: `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/CockpitHeader.kt`
+- Test: `shared/src/commonTest/kotlin/de/bavaco/gt7/ui/CockpitHeaderTest.kt`
 
 **Interfaces:**
 - Consumes: `LapSummary`, `SessionSummary`, `ComparisonLap`, `EngineerState`, `LapTableStats`.
@@ -123,7 +123,7 @@
 ### Task 6: Kurvenliste – Oberfläche
 
 **Files:**
-- Modify: `shared/src/commonMain/kotlin/de/stiller/gt7/ui/CornerList.kt`
+- Modify: `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/CornerList.kt`
 - Delete später (Task 7): `EngineerPanel.kt`
 
 **Interfaces:**
@@ -137,10 +137,10 @@
 ### Task 7: Cockpit-Analyse und Diagramme
 
 **Files:**
-- Create: `shared/src/commonMain/kotlin/de/stiller/gt7/ui/CockpitAnalysis.kt`
+- Create: `shared/src/commonMain/kotlin/de/bavaco/gt7/ui/CockpitAnalysis.kt`
 - Modify: `ui/AnalysisScreen.kt` (Layout-Umschalter, `CompareView`, `LAYOUT_*` entfernen; Cockpit einsetzen), `ui/Charts.kt` (Stil, Marken „T<n>“), `ui/AnalysisControls.kt` (kantige Knöpfe), `ui/DetailAnalysis.kt` (Rundentabelle/Rundenzeiten-Diagramm als `SessionLaps` behalten, Rest entfernen; Spitzen/Täler entfallen)
 - Delete: `ui/EngineerPanel.kt` (`EngineerState` zieht nach `CornerList.kt`)
-- Test: `shared/src/commonTest/kotlin/de/stiller/gt7/ui/AnalysisViewportTest.kt` (Marken-Beschriftung)
+- Test: `shared/src/commonTest/kotlin/de/bavaco/gt7/ui/AnalysisViewportTest.kt` (Marken-Beschriftung)
 
 **Interfaces:**
 - Consumes: Tasks 1–6, `AnalysisViewport`, `chartOverlay`, `deltaSeries`, `ExportActions`, `PlaybackBar`.
@@ -156,7 +156,7 @@
 ### Task 8: Übrige Tabs, Screenshots, Abschluss
 
 **Files:**
-- Modify: nach Sichtprüfung einzelne Tabs (nur Stil, keine Aufteilung), `shared/src/desktopTest/kotlin/de/stiller/gt7/screens/ReadmeScreenshots.kt` (Analyse über `CockpitAnalysis`), `docs/screenshots/*.png`, `README.md` (Analyse-Absatz)
+- Modify: nach Sichtprüfung einzelne Tabs (nur Stil, keine Aufteilung), `shared/src/desktopTest/kotlin/de/bavaco/gt7/screens/ReadmeScreenshots.kt` (Analyse über `CockpitAnalysis`), `docs/screenshots/*.png`, `README.md` (Analyse-Absatz)
 
 - [ ] **Step 1:** Screenshots rendern (README-Befehl), alle vier ansehen; Lesbarkeit, Kontrast und Überläufe prüfen und beheben.
 - [ ] **Step 2:** README-Absatz „Analyse mit Renningenieur“ an das Cockpit anpassen (Kurvenliste, ◀ ▶/Pfeiltasten).
