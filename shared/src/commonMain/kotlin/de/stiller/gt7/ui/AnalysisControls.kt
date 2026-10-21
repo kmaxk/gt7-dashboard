@@ -7,6 +7,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,8 +26,8 @@ fun ChartToolbar(viewport: AnalysisViewport, modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         FilterChip(selected = viewport.mode == AxisMode.DISTANCE, onClick = { viewport.switchMode(AxisMode.DISTANCE) }, label = { Text("Distanz") })
         FilterChip(selected = viewport.mode == AxisMode.TIME, onClick = { viewport.switchMode(AxisMode.TIME) }, label = { Text("Zeit") })
-        OutlinedButton(onClick = { viewport.zoom(ZOOM_STEP) }) { Text("+") }
-        OutlinedButton(onClick = { viewport.zoom(1f / ZOOM_STEP) }, enabled = viewport.isZoomed) { Text("−") }
+        OutlinedButton(shape = RaceButtonShape, onClick = { viewport.zoom(ZOOM_STEP) }) { Text("+") }
+        OutlinedButton(shape = RaceButtonShape, onClick = { viewport.zoom(1f / ZOOM_STEP) }, enabled = viewport.isZoomed) { Text("−") }
         TextButton(onClick = { viewport.resetZoom() }, enabled = viewport.isZoomed) { Text("Gesamt") }
         Text(
             if (viewport.mode == AxisMode.DISTANCE) "x in m" else "x in s",
@@ -58,6 +59,11 @@ fun PlaybackBar(viewport: AnalysisViewport, modifier: Modifier = Modifier) {
             value = viewport.playMs.toFloat(),
             onValueChange = { viewport.playing = false; viewport.seek(it.toInt()) },
             valueRange = 0f..end.toFloat(),
+            colors = SliderDefaults.colors(
+                thumbColor = RaceColors.Accent,
+                activeTrackColor = RaceColors.Accent,
+                inactiveTrackColor = RaceColors.Line,
+            ),
             modifier = Modifier.weight(1f),
         )
         Text(

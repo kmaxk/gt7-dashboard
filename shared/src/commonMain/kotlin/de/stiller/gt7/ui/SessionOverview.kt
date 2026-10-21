@@ -143,7 +143,7 @@ private fun CarFilterMenu(sessions: List<SessionSummary>, cars: CarCatalog, stat
 private fun FilterMenu(label: String, options: List<Pair<String, () -> Unit>>) {
     var open by remember { mutableStateOf(false) }
     Box {
-        OutlinedButton(onClick = { open = true }) { Text("$label ▾", maxLines = 1) }
+        OutlinedButton(shape = RaceButtonShape, onClick = { open = true }) { Text("$label ▾", maxLines = 1) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             options.forEach { (name, select) -> DropdownMenuItem(text = { Text(name) }, onClick = { select(); open = false }) }
         }

@@ -99,7 +99,7 @@ fun App(
                             }
                             // phone live view without tab row: a small button brings it back
                             if (compact && tab == 0) {
-                                FilledTonalButton(onClick = { tabsExpanded = !tabsExpanded }, Modifier.align(Alignment.BottomStart).padding(8.dp)) { Text("☰") }
+                                FilledTonalButton(onClick = { tabsExpanded = !tabsExpanded }, Modifier.align(Alignment.BottomStart).padding(8.dp), shape = RaceButtonShape) { Text("☰") }
                             }
                         }
                     }

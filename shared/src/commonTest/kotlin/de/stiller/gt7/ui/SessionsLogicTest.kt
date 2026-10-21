@@ -108,4 +108,12 @@ class SessionsLogicTest {
         assertEquals(null, stats.theoreticalMs)
         assertEquals(null, stats.bestSectors)
     }
+
+    @Test fun sectorsAddUpToTheGt7LapTimeSoTheTheoreticalBestIsNeverSlower() {
+        // the samples measure 90.6 s, GT7 timed the lap at 90.543 s
+        val lap = de.stiller.gt7.storage.LapSummary(1, 1, 1, 90_543, 1f, true)
+        val stats = lapTableStats(listOf(lap), mapOf(1L to lapSamples(3020, 3020, 3020)))
+        assertEquals(90_543, stats.sectors[1L]!!.sum())
+        assertEquals(90_543, stats.theoreticalMs)
+    }
 }

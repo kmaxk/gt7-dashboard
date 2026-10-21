@@ -72,8 +72,8 @@ fun SettingsScreen(
         Text("PS5", style = MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(value = ip, onValueChange = { ip = it }, label = { Text("IP-Adresse") }, singleLine = true)
-            Button(onClick = { controller.connect(ip.trim()) }, enabled = ip.isNotBlank()) { Text("Verbinden") }
-            OutlinedButton(onClick = { controller.discover() }, enabled = connection != ConnectionStatus.Searching) {
+            Button(shape = RaceButtonShape, onClick = { controller.connect(ip.trim()) }, enabled = ip.isNotBlank()) { Text("Verbinden") }
+            OutlinedButton(shape = RaceButtonShape, onClick = { controller.discover() }, enabled = connection != ConnectionStatus.Searching) {
                 Text(if (connection == ConnectionStatus.Searching) "Suche läuft…" else "PS5 suchen")
             }
         }
@@ -98,7 +98,7 @@ fun SettingsScreen(
 
         Text("Mitschnitt", style = MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Button(onClick = {
+            Button(shape = RaceButtonShape, onClick = {
                 val stopped = recordingName
                 if (stopped != null) {
                     controller.stopRecording()
@@ -133,7 +133,7 @@ fun SettingsScreen(
             }) { Text(if (recordingName != null) "Mitschnitt stoppen" else "Mitschnitt starten") }
             recordingName?.let { Text(it) }
         }
-        OutlinedButton(onClick = {
+        OutlinedButton(shape = RaceButtonShape, onClick = {
             scope.launch {
                 try {
                     val file = files.open("Mitschnitt abspielen", "gt7rec", recordingsDir().toString())
@@ -189,7 +189,7 @@ private fun DataSettings(controller: SessionController, transfer: DataTransfer, 
         style = MaterialTheme.typography.bodySmall,
     )
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        OutlinedButton(enabled = !busy, onClick = {
+        OutlinedButton(shape = RaceButtonShape, enabled = !busy, onClick = {
             run {
                 val name = files.save("Daten exportieren", exportFileName(Clock.System.now().toEpochMilliseconds())) { path ->
                     withContext(Dispatchers.Default) { controller.exclusive { transfer.exportTo(path) } }
@@ -197,7 +197,7 @@ private fun DataSettings(controller: SessionController, transfer: DataTransfer, 
                 name?.let { "Exportiert nach $it" }
             }
         }) { Text("Exportieren…") }
-        OutlinedButton(enabled = !busy, onClick = {
+        OutlinedButton(shape = RaceButtonShape, enabled = !busy, onClick = {
             run {
                 val file = files.open("Daten importieren", EXPORT_EXTENSION) ?: return@run null
                 val result = withContext(Dispatchers.Default) { controller.importData { transfer.importFrom(file) } }
@@ -227,13 +227,13 @@ private fun DriverSettings(controller: SessionController) {
             if (editing == d.id) {
                 val valid = validateDriverName(name, drivers.filter { it.id != d.id })
                 OutlinedTextField(value = name, onValueChange = { name = it.take(20) }, singleLine = true, isError = valid == null)
-                Button(onClick = { valid?.let { controller.renameDriver(d.id, it) }; editing = null }, enabled = valid != null) { Text("Speichern") }
+                Button(shape = RaceButtonShape, onClick = { valid?.let { controller.renameDriver(d.id, it) }; editing = null }, enabled = valid != null) { Text("Speichern") }
                 TextButton(onClick = { editing = null }) { Text("Abbrechen") }
             } else {
                 Text(d.name, Modifier.width(200.dp))
-                OutlinedButton(onClick = { editing = d.id; name = d.name }) { Text("Umbenennen") }
+                OutlinedButton(shape = RaceButtonShape, onClick = { editing = d.id; name = d.name }) { Text("Umbenennen") }
                 val isActive = d.id == active?.id
-                OutlinedButton(
+                OutlinedButton(shape = RaceButtonShape, 
                     onClick = { if (d.id in withSessions) confirmDelete = d else controller.deleteDriver(d.id) },
                     enabled = !isActive && drivers.size > 1,
                 ) { Text("Löschen") }

@@ -95,7 +95,7 @@ private fun CarRow(car: CarInfo, facts: String, onRename: (Int, String) -> Unit,
             if (editing) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(value = name, onValueChange = { name = it.take(60) }, singleLine = true, isError = name.isBlank())
-                    Button(onClick = { onRename(car.code, name); editing = false }, enabled = name.isNotBlank()) { Text("Speichern") }
+                    Button(shape = RaceButtonShape, onClick = { onRename(car.code, name); editing = false }, enabled = name.isNotBlank()) { Text("Speichern") }
                     TextButton(onClick = { editing = false }) { Text("Abbrechen") }
                 }
             } else {
@@ -104,7 +104,7 @@ private fun CarRow(car: CarInfo, facts: String, onRename: (Int, String) -> Unit,
             Text("$facts · ${carOrigin(car)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
         }
         if (!editing) {
-            OutlinedButton(onClick = { editing = true; name = if (unknown) "" else car.name }) { Text(if (unknown) "Benennen" else "Umbenennen") }
+            OutlinedButton(shape = RaceButtonShape, onClick = { editing = true; name = if (unknown) "" else car.name }) { Text(if (unknown) "Benennen" else "Umbenennen") }
             if (car.custom) TextButton(onClick = { onReset(car.code) }) { Text(if (car.listName != null) "Listenname" else "Entfernen") }
         }
     }
@@ -124,7 +124,7 @@ private fun AddCar(cars: CarCatalog, onRename: (Int, String) -> Unit) {
                 label = { Text("ID") }, modifier = Modifier.width(120.dp),
             )
             OutlinedTextField(value = name, onValueChange = { name = it.take(60) }, singleLine = true, label = { Text("Name") })
-            Button(onClick = { parsed?.let { onRename(it, name) }; code = ""; name = "" }, enabled = parsed != null && name.isNotBlank()) {
+            Button(shape = RaceButtonShape, onClick = { parsed?.let { onRename(it, name) }; code = ""; name = "" }, enabled = parsed != null && name.isNotBlank()) {
                 Text("Speichern")
             }
         }

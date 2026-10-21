@@ -106,7 +106,7 @@ private fun TrackCard(row: TrackRow, onRename: (String) -> Unit, onDelete: () ->
             if (editing) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(value = name, onValueChange = { name = it.take(40) }, singleLine = true, isError = name.isBlank())
-                    Button(onClick = { onRename(name); editing = false }, enabled = name.isNotBlank()) { Text("Speichern") }
+                    Button(shape = RaceButtonShape, onClick = { onRename(name); editing = false }, enabled = name.isNotBlank()) { Text("Speichern") }
                     TextButton(onClick = { editing = false; name = t.name }) { Text("Abbrechen") }
                 }
             } else {
@@ -117,8 +117,8 @@ private fun TrackCard(row: TrackRow, onRename: (String) -> Unit, onDelete: () ->
         }
         if (!editing) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                OutlinedButton(onClick = { editing = true; name = t.name }) { Text("Umbenennen") }
-                OutlinedButton(onClick = onDelete) { Text("Löschen") }
+                OutlinedButton(shape = RaceButtonShape, onClick = { editing = true; name = t.name }) { Text("Umbenennen") }
+                OutlinedButton(shape = RaceButtonShape, onClick = onDelete) { Text("Löschen") }
             }
         }
     }

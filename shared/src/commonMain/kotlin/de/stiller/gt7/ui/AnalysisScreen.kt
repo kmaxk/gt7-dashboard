@@ -59,7 +59,7 @@ fun AnalysisScreen(
     var laps by remember { mutableStateOf<List<LapSummary>>(emptyList()) }
     var samplesA by remember { mutableStateOf<List<LapSample>>(emptyList()) }
     var samplesB by remember { mutableStateOf<List<LapSample>>(emptyList()) }
-    var detail by remember { mutableStateOf(repo.setting(LAYOUT_SETTING) == LAYOUT_DETAIL) }
+    var moreChannels by remember { mutableStateOf(false) }
     var engineer by remember { mutableStateOf<EngineerState>(EngineerState.Computing) }
     val scope = rememberCoroutineScope()
     val activeSession by controller.activeSession.collectAsState()
@@ -96,9 +96,6 @@ fun AnalysisScreen(
             EngineerState.Ready(Engineer.analyze(samplesA, repo.samples(comparison.lapId)), comparison, null)
         }
     }
-    val corners = (engineer as? EngineerState.Ready)?.debrief?.reports?.map { it.corner } ?: emptyList()
-    val compact = LocalCompact.current
-    val panel: @Composable (Modifier) -> Unit = { m -> EngineerPanel(engineer, language, viewport, m) }
 
     val sessionA = picked.firstOrNull()?.let { a -> sessions.firstOrNull { it.id == a.sessionId } }
     val open = sessions.firstOrNull { it.id == openId }
@@ -144,53 +141,41 @@ fun AnalysisScreen(
     }
     val content: @Composable (Modifier) -> Unit = { m ->
         Column(m) {
-            Row(Modifier.horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
-                LayoutSwitch(detail) {
-                    detail = it
-                    scope.launch(Dispatchers.Default) { repo.setSetting(LAYOUT_SETTING, if (it) LAYOUT_DETAIL else LAYOUT_COMPARE) }
-                }
-                if (aId != null && viewport != null) {
-                    ChartToolbar(viewport)
-                    picked.firstOrNull()?.let { lapA ->
-                        ExportActions(lapA, sessions.firstOrNull { it.id == lapA.sessionId }, samplesA, cars, files, capture) { exportMessage = it }
-                    }
-                }
-            }
             exportMessage?.let { Text(it, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 8.dp)) }
-            if (aId == null || viewport == null) {
+            val lapA = picked.firstOrNull()
+            if (lapA == null || viewport == null) {
                 Column(Modifier.fillMaxSize(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("Wähle eine oder zwei Runden aus (zweite Runde nur von derselben Strecke).")
                 }
             } else {
+                val pickedB = picked.getOrNull(1)
                 // the analysis also draws into [capture], which the PNG export saves
                 val captured = Modifier.fillMaxSize().drawWithContent {
                     capture.record { this@drawWithContent.drawContent() }
                     drawLayer(capture)
                 }
-                Box(captured) {
-                    if (detail) {
-                        DetailAnalysisView(
-                            viewport, corners, laps, repo::samples, Modifier.fillMaxSize().padding(8.dp),
-                            panel = if (compact) null else ({ panel(Modifier.fillMaxWidth()) }),
-                        )
-                    } else {
-                        Row(Modifier.fillMaxSize().padding(8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
-                            CompareView(viewport, corners, Modifier.weight(1f).fillMaxHeight())
-                            if (!compact) panel(Modifier.width(ENGINEER_WIDTH).fillMaxHeight().verticalScroll(rememberScrollState()))
+                CockpitAnalysis(
+                    viewport, engineer, language,
+                    CockpitLaps(lapA, sessions.firstOrNull { it.id == lapA.sessionId }, pickedB, pickedB?.let { b -> sessions.firstOrNull { it.id == b.sessionId } }),
+                    laps, repo::samples, cars::name, moreChannels, { moreChannels = it },
+                    toolbar = {
+                        Row(Modifier.horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
+                            ChartToolbar(viewport)
+                            ExportActions(lapA, sessions.firstOrNull { it.id == lapA.sessionId }, samplesA, cars, files, capture) { exportMessage = it }
                         }
-                    }
-                }
+                    },
+                    modifier = captured,
+                )
             }
         }
     }
 
     if (LocalCompact.current) {
-        // phone: laps on top, the analysis below at a fixed height, everything scrolls
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        // phone: laps on top, the cockpit below scrolls on its own
+        Column(Modifier.fillMaxSize()) {
             sessionHeader()
             lapList(Modifier.fillMaxWidth().height(COMPACT_LIST_HEIGHT))
-            content(Modifier.fillMaxWidth().height(COMPACT_ANALYSIS_HEIGHT))
-            if (aId != null) panel(Modifier.fillMaxWidth().padding(8.dp))
+            content(Modifier.fillMaxWidth().weight(1f))
         }
     } else {
         Row(Modifier.fillMaxSize()) {
@@ -203,53 +188,4 @@ fun AnalysisScreen(
     }
 }
 
-private val COMPACT_LIST_HEIGHT = 240.dp
-private val COMPACT_ANALYSIS_HEIGHT = 600.dp
-private val ENGINEER_WIDTH = 320.dp
-
-@Composable
-private fun CompareView(viewport: AnalysisViewport, corners: List<Corner>, modifier: Modifier) {
-    val a = viewport.a
-    val b = viewport.b
-    val mode = viewport.mode
-    val delta = remember(a, b) { if (b != null) deltaCurve(a, b) else emptyList() }
-    val overlay = chartOverlay(corners, viewport.selectedCorner, mode, a)
-    Column(modifier) {
-        val chart = Modifier.fillMaxWidth().weight(1f)
-        LineChart("Tempo (km/h)", remember(a, b, mode) { lapSeries(a, b, mode) { it.speedMps * 3.6f } }, modifier = chart, viewport = viewport, overlay = overlay)
-        LineChart("Gas (grün) / Bremse (rot) in %", remember(a, b, mode) { throttleBrake(a, b, mode) }, 0f..100f, chart, viewport, overlay)
-        LineChart("Gang", remember(a, b, mode) { lapSeries(a, b, mode, steps = true) { it.gear.toFloat() } }, modifier = chart, viewport = viewport, overlay = overlay)
-        if (b != null) {
-            val d = remember(delta, mode) { listOf(Series(deltaSeries(delta, mode, a), LapAColor)) }
-            LineChart("Delta A − B (s, positiv = A langsamer)", d, modifier = chart, viewport = viewport, overlay = overlay)
-        }
-        TrackMap(a, delta, Modifier.fillMaxWidth().weight(1.5f), viewport, corners)
-        PlaybackBar(viewport, Modifier.fillMaxWidth())
-    }
-}
-
-private fun lapSeries(a: List<LapSample>, b: List<LapSample>?, mode: AxisMode, steps: Boolean = false, f: (LapSample) -> Float): List<Series> =
-    listOfNotNull(
-        Series(a.map { xOf(it, mode) to f(it) }, LapAColor, steps = steps),
-        b?.let { Series(it.map { s -> xOf(s, mode) to f(s) }, LapBColor, steps = steps) },
-    )
-
-private fun throttleBrake(a: List<LapSample>, b: List<LapSample>?, mode: AxisMode): List<Series> {
-    fun pair(l: List<LapSample>, dashed: Boolean) = listOf(
-        Series(l.map { xOf(it, mode) to it.throttle * 100f }, GoodGreen, dashed),
-        Series(l.map { xOf(it, mode) to it.brake * 100f }, BadRed, dashed),
-    )
-    return pair(a, false) + (b?.let { pair(it, true) } ?: emptyList())
-}
-
-private const val LAYOUT_SETTING = "analysisLayout"
-private const val LAYOUT_COMPARE = "compare"
-private const val LAYOUT_DETAIL = "detail"
-
-@Composable
-private fun LayoutSwitch(detail: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.padding(horizontal = 8.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
-        FilterChip(selected = !detail, onClick = { onChange(false) }, label = { Text("Vergleich") })
-        FilterChip(selected = detail, onClick = { onChange(true) }, label = { Text("Detailanalyse") })
-    }
-}
+private val COMPACT_LIST_HEIGHT = 200.dp

@@ -161,17 +161,20 @@ class ReadmeScreenshots {
         val debrief = Engineer.analyze(slow, fast)
         val comparison = repo.comparisonLap(4, 1, 3656, 14)
         val state = EngineerState.Ready(debrief, null, fast.last().timeMs)
-        val corners = debrief.reports.map { it.corner }
-        val laps = sessions.filter { it.trackId == 4L }.flatMap { repo.laps(it.id) }
+        val all = sessions.filter { it.trackId == 4L }.flatMap { repo.laps(it.id) }
+        val lapA = all.first { it.id == 14L }
+        val lapB = all.first { it.id == 17L }
+        val laps = repo.laps(lapA.sessionId)
         val vp = AnalysisViewport(slow, fast).also { v ->
             debrief.tips.firstOrNull()?.corner?.let { v.toggleCorner(it) }
             v.moveCursor((v.range.start + v.range.endInclusive) / 2f)
         }
-        shot("analysis", 1600, 1000) {
-            Column(Modifier.padding(8.dp)) {
-                ChartToolbar(vp)
-                DetailAnalysisView(vp, corners, laps, repo::samples, Modifier.fillMaxSize(), panel = { EngineerPanel(state, TipLanguage.DE, vp) })
-            }
+        val picked = CockpitLaps(lapA, sessions.first { it.id == lapA.sessionId }, lapB, sessions.first { it.id == lapB.sessionId })
+        shot("analysis", 1280, 900, frames = 12) {
+            CockpitAnalysis(
+                vp, state, TipLanguage.DE, picked, laps, repo::samples, cars::name, moreChannels = false, onMoreChannels = {},
+                toolbar = { ChartToolbar(vp) }, modifier = Modifier.fillMaxSize(),
+            )
         }
         println("comparison $comparison")
     }

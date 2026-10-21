@@ -25,6 +25,9 @@ import androidx.compose.ui.unit.sp
 
 private val CardShape = RoundedCornerShape(2.dp)
 
+/** Material buttons are fully rounded by default; the race look keeps them angular. */
+val RaceButtonShape = RoundedCornerShape(2.dp)
+
 /** A surface with a 3 dp edge on the left in [accent]; without accent a plain surface. */
 @Composable
 fun RaceCard(modifier: Modifier = Modifier, accent: Color? = RaceColors.Accent, content: @Composable ColumnScope.() -> Unit) {
