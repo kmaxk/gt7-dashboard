@@ -67,6 +67,8 @@ jobs:
           done
 
   android:
+    # paused until the signing keystore is set up (secrets ANDROID_*); remove this line to build the APK again
+    if: false
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}

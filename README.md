@@ -54,7 +54,7 @@ Wird von GitHub Actions (`.github/workflows/release.yml`) auf einem Windows-Runn
 
 ## Android
 
-Die App läuft auf Smartphones und Tablets (Android 8 oder neuer, Querformat). Jeder Release enthält eine signierte `GT7-Dashboard-<version>.apk`.
+Die App läuft auf Smartphones und Tablets (Android 8 oder neuer, Querformat). Die signierte `GT7-Dashboard-<version>.apk` im Release ist **pausiert**, bis die Signierung eingerichtet ist (siehe unten); bis dahin lokal bauen.
 
 - **Installieren:** APK auf dem Gerät öffnen und „Unbekannte Apps installieren“ für den Browser bzw. die Dateien-App erlauben.
 - **Daten übertragen:** am Rechner *Einstellungen → Daten → Exportieren…* (z. B. in den Drive- oder Nextcloud-Ordner), auf dem Gerät *Importieren…* – und umgekehrt.
