@@ -43,14 +43,16 @@ object EngineerText {
 
     /** `verglichen mit: Max · 1:42.318 · gleiches Auto`. */
     fun basis(lap: ComparisonLap, l: TipLanguage): String {
-        val why = when (lap.basis) {
-            ComparisonBasis.REFERENCE -> if (de(l)) "Referenzrunde" else "reference lap"
-            ComparisonBasis.SAME_CAR -> if (de(l)) "gleiches Auto" else "same car"
-            ComparisonBasis.SAME_DRIVER -> if (de(l)) "anderes Auto" else "other car"
-            ComparisonBasis.ANY -> if (de(l)) "schnellste auf der Strecke" else "fastest on the track"
-        }
         val prefix = if (de(l)) "verglichen mit" else "compared with"
-        return "$prefix: ${lap.driverName ?: "?"} · ${formatLapTime(lap.timeMs)} · $why"
+        return "$prefix: ${lap.driverName ?: "?"} · ${formatLapTime(lap.timeMs)} · ${basisName(lap.basis, l)}"
+    }
+
+    /** Why the comparison lap was chosen, e.g. `Referenzrunde`. */
+    fun basisName(basis: ComparisonBasis, l: TipLanguage): String = when (basis) {
+        ComparisonBasis.REFERENCE -> if (de(l)) "Referenzrunde" else "reference lap"
+        ComparisonBasis.SAME_CAR -> if (de(l)) "gleiches Auto" else "same car"
+        ComparisonBasis.SAME_DRIVER -> if (de(l)) "anderes Auto" else "other car"
+        ComparisonBasis.ANY -> if (de(l)) "schnellste auf der Strecke" else "fastest on the track"
     }
 
     /** Basis when the user picked lap B: `verglichen mit: Runde B · 1:42.318`. */
