@@ -114,4 +114,10 @@ class AnalysisViewportTest {
         assertEquals(listOf(1.0f to 0.25f), deltaSeries(listOf(100f to 250), AxisMode.TIME, lap))
         assertEquals(listOf(100f to 0.25f), deltaSeries(listOf(100f to 250), AxisMode.DISTANCE, lap))
     }
+
+    @Test
+    fun markerLabelsAreTurnNumbers() {
+        assertEquals("T8", markerLabel(8))
+        assertEquals("T12", markerLabel(12))
+    }
 }

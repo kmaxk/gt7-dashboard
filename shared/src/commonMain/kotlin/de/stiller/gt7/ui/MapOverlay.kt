@@ -18,7 +18,7 @@ import de.stiller.gt7.session.LapSample
 
 private val Zone = RaceColors.TextPrimary.copy(alpha = 0.35f)
 private val CornerNumber = TextStyle(color = RaceColors.TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-private val SelectedNumber = CornerNumber.copy(color = Color.Black)
+private val SelectedNumber = CornerNumber
 private val DotRing = RaceColors.Carbon
 
 /** The chosen corner's zone under lap A; drawn before the lap line so the line stays on top. */
@@ -41,9 +41,11 @@ fun DrawScope.drawMapMarks(projection: MapProjection, a: List<LapSample>, corner
         val s = sampleAt(a, c.apexM, AxisMode.DISTANCE) ?: continue
         val (x, y) = projection.map(s.x, s.z)
         val selected = viewport?.selectedCorner == c
-        val center = Offset(x + radius * 1.6f, y - radius * 1.6f)
-        drawCircle(if (selected) Color.White else RaceColors.SurfaceRaised.copy(alpha = 0.85f), radius, center)
-        val t = measurer.measure("${c.number}", if (selected) SelectedNumber else CornerNumber)
+        val t = measurer.measure(markerLabel(c.number), if (selected) SelectedNumber else CornerNumber)
+        // wide enough for two-digit turns
+        val r = maxOf(radius, t.size.width / 2f + 3.dp.toPx())
+        val center = Offset(x + r * 1.4f, y - r * 1.4f)
+        drawCircle(if (selected) RaceColors.Accent else RaceColors.SurfaceRaised.copy(alpha = 0.85f), r, center)
         drawText(t, topLeft = Offset(center.x - t.size.width / 2f, center.y - t.size.height / 2f))
     }
     if (viewport == null) return

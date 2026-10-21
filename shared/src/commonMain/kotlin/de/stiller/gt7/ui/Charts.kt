@@ -52,6 +52,9 @@ data class Series(
     val steps: Boolean = false,
 )
 
+/** How a corner is named on charts, map and list: T1, T2, … */
+fun markerLabel(number: Int): String = "T$number"
+
 /** Corner markers (number, x) and the shaded x range of the chosen corner, on the chart's axis. */
 data class ChartOverlay(val markers: List<Pair<Int, Float>> = emptyList(), val shade: ClosedFloatingPointRange<Float>? = null)
 
@@ -127,7 +130,7 @@ fun LineChart(
                     for ((number, x) in overlay.markers) {
                         if (x < x0 || x > x1) continue
                         drawLine(Marker, Offset(px(x), plot.top), Offset(px(x), plot.top + plot.height))
-                        drawText(measurer.measure("$number", MarkerLabel), topLeft = Offset(px(x) + 2.dp.toPx(), plot.top))
+                        drawText(measurer.measure(markerLabel(number), MarkerLabel), topLeft = Offset(px(x) + 2.dp.toPx(), plot.top))
                     }
                     for (s in series) {
                         if (s.points.isEmpty()) continue

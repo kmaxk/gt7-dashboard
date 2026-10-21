@@ -26,15 +26,6 @@ import de.stiller.gt7.session.Debrief
 import de.stiller.gt7.storage.ComparisonLap
 import kotlin.math.roundToInt
 
-/** What the race engineer has to say about the chosen laps. */
-sealed interface EngineerState {
-    data object Computing : EngineerState
-    data object NoTrack : EngineerState
-    data object NoComparison : EngineerState
-    /** [comparison] is the automatically chosen lap; null when the user picked lap B ([pickedTimeMs]). */
-    data class Ready(val debrief: Debrief, val comparison: ComparisonLap?, val pickedTimeMs: Int?) : EngineerState
-}
-
 private val Selected = RaceColors.SurfaceRaised
 
 /** Tips and corner table; a click on either selects the corner in the [viewport]. */
