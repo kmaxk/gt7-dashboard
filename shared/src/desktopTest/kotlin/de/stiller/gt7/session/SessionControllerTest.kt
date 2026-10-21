@@ -481,8 +481,10 @@ class SessionControllerTest {
         runCurrent()
         val line = assertNotNull(c.trackLine.value)
         assertTrue(line.size > 100)
-        assertNull(r.sessions().first().first().trackId) // only shown, not assigned before the lap
+        // check the live state first: sessions() delivers on a real thread, and while the test waits for it
+        // runTest moves the virtual clock on, so the fake source would finish the lap and the question would come
         assertNull(c.trackQuestion.value)
+        assertNull(r.sessions().first().first().trackId) // only shown, not assigned before the lap
     }
 
     @Test
