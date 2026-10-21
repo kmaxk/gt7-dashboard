@@ -47,7 +47,7 @@ fun App(
     onLiveVisible: (Boolean) -> Unit = {},
 ) {
     Gt7Theme {
-        Surface(Modifier.fillMaxSize()) {
+        Surface(Modifier.fillMaxSize().carbon(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = RaceColors.TextPrimary) {
             var tab by remember { mutableStateOf(0) }
             LaunchedEffect(tab) { onLiveVisible(tab == 0) }
             var liveLayout by remember { mutableStateOf(if (repo.setting("liveLayout") == LiveLayout.Race.name) LiveLayout.Race else LiveLayout.Standard) }

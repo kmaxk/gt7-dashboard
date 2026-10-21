@@ -22,8 +22,6 @@ import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
-val LapAColor = Color(0xFFF5E43A)
-val LapBColor = Color(0xFF4FC3F7)
 private val Selected = Color(0xFF2A2F3A)
 
 private fun two(n: Int) = n.toString().padStart(2, '0')
