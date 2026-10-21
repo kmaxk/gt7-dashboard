@@ -14,9 +14,9 @@ Das **Renn-Display** zeigt dasselbe groß und kontrastreich, mit Fahrhilfen, Öl
 
 ![Renn-Display](docs/screenshots/live-race.png)
 
-### Analyse mit Renningenieur
+### Analyse-Cockpit mit Renningenieur
 
-Zwei Runden im Vergleich: der Renningenieur nennt die teuersten Kurven samt Ursache, die Kurventabelle zeigt jede Kurve. Ein gemeinsamer Cursor läuft über alle Diagramme, Zoom und Distanz-/Zeitachse wirken überall zugleich; ein Klick auf eine Kurve zoomt hin und markiert sie auf der Ideallinie. Unter der Karte lässt sich die Runde abspielen.
+Oben die Kernzahlen (Runde A, Runde B oder automatische Vergleichsrunde, Differenz, theoretische Bestzeit). Darunter die Ideallinie mit Wiedergabe und daneben die **Kurvenliste**: jede Kurve mit ihrem Zeitverlust, die drei teuersten rot markiert; die gewählte Kurve klappt auf und erklärt, was sie kostet. Mit ◀ ▶ oder den Pfeiltasten geht es Kurve für Kurve durch die Runde, Karte und Diagramme zoomen mit. Darunter Delta, Tempo und Gas/Bremse mit gemeinsamem Cursor; Gang, Drehzahl, Ladedruck und Rollen sind eingeklappt.
 
 ![Analyse mit Renningenieur](docs/screenshots/analysis.png)
 
