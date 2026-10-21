@@ -29,7 +29,7 @@ android {
         applicationId = "de.stiller.gt7dashboard"
         minSdk = 26
         targetSdk = 36
-        versionName = providers.gradleProperty("versionName").getOrElse("0.1.0")
+        versionName = providers.gradleProperty("versionName").getOrElse("0.2.0")
         versionCode = providers.gradleProperty("versionCode").getOrElse("1").toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
