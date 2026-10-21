@@ -49,3 +49,13 @@ fun cockpitHeader(
             ?: HeaderCard("Theoretisch", NONE, null, Tone.Neutral),
     )
 }
+
+/** Laps of lap A's session: the open session's laps when A comes from it, else [load]ed — B may come from another session. */
+fun sessionLapsOfA(lapA: LapSummary, openLaps: List<LapSummary>, load: (Long) -> List<LapSummary>): List<LapSummary> =
+    if (openLaps.any { it.sessionId == lapA.sessionId }) openLaps else load(lapA.sessionId)
+
+/** Space the cockpit keeps for padding, toolbar, header cards, delta chart and gaps, so the delta chart stays in view. */
+private const val RESERVED_DP = 380f
+
+/** Height (dp) of the map and corner-list row for a cockpit [availableDp] high: what is left, within sensible bounds. */
+fun mapRowHeight(availableDp: Float): Float = (availableDp - RESERVED_DP).coerceIn(240f, 460f)

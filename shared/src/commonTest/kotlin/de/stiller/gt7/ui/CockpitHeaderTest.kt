@@ -59,4 +59,23 @@ class CockpitHeaderTest {
     fun stillComputing() {
         assertEquals("Vergleich|…|null|Neutral", cockpitHeader(lapA, session, null, null, EngineerState.Computing, stats, car)[1].short())
     }
+
+    @Test
+    fun theoreticalBestComesFromLapAsSessionEvenWhenAnotherSessionIsOpen() {
+        val openLaps = listOf(LapSummary(30, 2, 1, 80_000, 1f, true), LapSummary(31, 2, 2, 81_000, 1f, true))
+        val ownLaps = listOf(lapA, LapSummary(15, 1, 2, 91_000, 1f, true))
+        var loaded: Long? = null
+        assertEquals(ownLaps, sessionLapsOfA(lapA, openLaps) { loaded = it; ownLaps })
+        assertEquals(1L, loaded)
+        // A's own session is open: no extra loading
+        assertEquals(ownLaps, sessionLapsOfA(lapA, ownLaps) { error("must not load") })
+    }
+
+    @Test
+    fun mapRowTakesWhatIsLeftAboveTheDeltaChart() {
+        // 1280 × 800 window minus title bar and tab row leaves about 724 dp for the cockpit
+        assertEquals(344f, mapRowHeight(724f))
+        assertEquals(460f, mapRowHeight(1200f))
+        assertEquals(240f, mapRowHeight(400f))
+    }
 }

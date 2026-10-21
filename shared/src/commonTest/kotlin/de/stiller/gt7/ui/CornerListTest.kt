@@ -38,4 +38,14 @@ class CornerListTest {
         val none = reports(0, 0)
         assertEquals(listOf(0f, 0f), none.map { lossBarFraction(it, none) })
     }
+
+    @Test
+    fun scrollOnlyAsFarAsTheSelectedRowNeeds() {
+        // viewport 0..400 px
+        assertNull(scrollToShow(rowTop = 100, rowBottom = 160, current = 0, viewport = 400))
+        assertEquals(260, scrollToShow(rowTop = 600, rowBottom = 660, current = 0, viewport = 400))
+        assertEquals(50, scrollToShow(rowTop = 50, rowBottom = 110, current = 200, viewport = 400))
+        // a row taller than the viewport shows its top
+        assertEquals(600, scrollToShow(rowTop = 600, rowBottom = 1100, current = 0, viewport = 400))
+    }
 }

@@ -1,5 +1,6 @@
 package de.stiller.gt7.ui
 
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.Canvas
@@ -47,7 +48,6 @@ import de.stiller.gt7.storage.SessionSummary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-private val MapRowHeight = 400.dp
 private val MainChartHeight = 180.dp
 private val PedalChartHeight = 150.dp
 private val MoreChartHeight = 120.dp
@@ -68,6 +68,7 @@ fun CockpitAnalysis(
     picked: CockpitLaps,
     laps: List<LapSummary>,
     loadSamples: (Long) -> List<LapSample>,
+    loadLaps: (Long) -> List<LapSummary>,
     carName: (Int) -> String,
     moreChannels: Boolean,
     onMoreChannels: (Boolean) -> Unit,
@@ -78,19 +79,27 @@ fun CockpitAnalysis(
     val corners = (engineer as? EngineerState.Ready)?.debrief?.reports?.map { it.corner } ?: emptyList()
     var shares by remember { mutableStateOf<Map<Long, InputShares>>(emptyMap()) }
     var stats by remember { mutableStateOf<LapTableStats?>(null) }
-    LaunchedEffect(laps) {
+    // the header's theoretical best belongs to lap A's session, which need not be the open one
+    var statsA by remember { mutableStateOf<LapTableStats?>(null) }
+    LaunchedEffect(laps, picked.lapA.sessionId) {
+        stats = null
+        statsA = null
         withContext(Dispatchers.Default) {
             val samples = laps.associate { it.id to loadSamples(it.id) }
             shares = samples.mapValues { inputShares(it.value) }
             stats = lapTableStats(laps, samples)
+            val lapsA = sessionLapsOfA(picked.lapA, laps, loadLaps)
+            statsA = if (lapsA === laps) stats else lapTableStats(lapsA, lapsA.associate { it.id to loadSamples(it.id) })
         }
     }
-    val header = cockpitHeader(picked.lapA, picked.sessionA, picked.pickedB, picked.sessionB, engineer, stats, carName)
+    val header = cockpitHeader(picked.lapA, picked.sessionA, picked.pickedB, picked.sessionB, engineer, statsA, carName)
     val focus = remember { FocusRequester() }
     LaunchedEffect(viewport) { runCatching { focus.requestFocus() } }
 
+    BoxWithConstraints(modifier) {
+    val mapRow = mapRowHeight(maxHeight.value).dp
     Column(
-        modifier.focusRequester(focus).focusable().cornerKeys(engineer, viewport).verticalScroll(rememberScrollState()).padding(8.dp),
+        Modifier.fillMaxSize().focusRequester(focus).focusable().cornerKeys(engineer, viewport).verticalScroll(rememberScrollState()).padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) { toolbar() }
@@ -105,13 +114,14 @@ fun CockpitAnalysis(
             map(Modifier.fillMaxWidth().aspectRatio(1.2f))
             CornerList(engineer, language, viewport, Modifier.fillMaxWidth())
         } else {
-            Row(Modifier.fillMaxWidth().height(MapRowHeight), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth().height(mapRow), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 map(Modifier.weight(0.6f).fillMaxHeight())
-                CornerList(engineer, language, viewport, Modifier.weight(0.4f).fillMaxHeight().verticalScroll(rememberScrollState()))
+                CornerList(engineer, language, viewport, Modifier.weight(0.4f).fillMaxHeight(), scrollable = true)
             }
         }
         Charts(viewport, corners, moreChannels, onMoreChannels)
         SessionLaps(laps, shares, stats, Modifier.fillMaxWidth().padding(top = 8.dp))
+    }
     }
 }
 

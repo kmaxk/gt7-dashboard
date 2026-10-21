@@ -157,7 +157,7 @@ fun AnalysisScreen(
                 CockpitAnalysis(
                     viewport, engineer, language,
                     CockpitLaps(lapA, sessions.firstOrNull { it.id == lapA.sessionId }, pickedB, pickedB?.let { b -> sessions.firstOrNull { it.id == b.sessionId } }),
-                    laps, repo::samples, cars::name, moreChannels, { moreChannels = it },
+                    laps, repo::samples, repo::laps, cars::name, moreChannels, { moreChannels = it },
                     toolbar = {
                         Row(Modifier.horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
                             ChartToolbar(viewport)

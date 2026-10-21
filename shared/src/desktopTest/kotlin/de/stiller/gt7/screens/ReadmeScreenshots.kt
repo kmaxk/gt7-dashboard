@@ -172,9 +172,19 @@ class ReadmeScreenshots {
         val picked = CockpitLaps(lapA, sessions.first { it.id == lapA.sessionId }, lapB, sessions.first { it.id == lapB.sessionId })
         shot("analysis", 1280, 900, frames = 12) {
             CockpitAnalysis(
-                vp, state, TipLanguage.DE, picked, laps, repo::samples, cars::name, moreChannels = false, onMoreChannels = {},
+                vp, state, TipLanguage.DE, picked, laps, repo::samples, repo::laps, cars::name, moreChannels = false, onMoreChannels = {},
                 toolbar = { ChartToolbar(vp) }, modifier = Modifier.fillMaxSize(),
             )
+        }
+        if (System.getenv("SCREENSHOT_CHECK") != null) {
+            // the space a 1280 × 800 window leaves beside the lap list, with the last corner picked
+            val last = AnalysisViewport(slow, fast).also { v -> debrief.reports.lastOrNull()?.corner?.let { v.toggleCorner(it) } }
+            shot("check-cockpit-940x724", 940, 724, frames = 12) {
+                CockpitAnalysis(
+                    last, state, TipLanguage.DE, picked, laps, repo::samples, repo::laps, cars::name, moreChannels = false, onMoreChannels = {},
+                    toolbar = { ChartToolbar(last) }, modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
         println("comparison $comparison")
     }

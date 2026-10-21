@@ -1,5 +1,12 @@
 package de.stiller.gt7.ui
 
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -60,6 +67,13 @@ fun stepCorner(corners: List<Corner>, selected: Corner?, direction: Int): Corner
 fun costliestCorners(reports: List<CornerReport>, count: Int = 3): Set<Int> =
     reports.filter { it.lossMs > 0 }.sortedByDescending { it.lossMs }.take(count).map { it.corner.number }.toSet()
 
+/** Scroll position (px) that shows a row from [rowTop] to [rowBottom] in a [viewport] scrolled to [current]; null if it is in view. */
+fun scrollToShow(rowTop: Int, rowBottom: Int, current: Int, viewport: Int): Int? = when {
+    rowTop < current -> rowTop
+    rowBottom > current + viewport -> minOf(rowTop, rowBottom - viewport)
+    else -> null
+}
+
 /** Length of the loss bar, 0–1, relative to the largest loss or gain of all corners. */
 fun lossBarFraction(report: CornerReport, reports: List<CornerReport>): Float {
     val max = reports.maxOfOrNull { abs(it.lossMs) } ?: 0
@@ -88,9 +102,26 @@ fun Modifier.cornerKeys(state: EngineerState, viewport: AnalysisViewport): Modif
 
 /** Every corner in driving order with its loss; the selected one shows the tip and its measures. */
 @Composable
-fun CornerList(state: EngineerState, language: TipLanguage, viewport: AnalysisViewport, modifier: Modifier = Modifier) {
+fun CornerList(
+    state: EngineerState,
+    language: TipLanguage,
+    viewport: AnalysisViewport,
+    modifier: Modifier = Modifier,
+    scrollable: Boolean = false,
+) {
     val compact = LocalCompact.current
-    Column(modifier.background(RaceColors.Surface).padding(8.dp)) {
+    val scroll = rememberScrollState()
+    // top and bottom (px) of each corner's row within the list, for scrolling the selected one into view
+    val rows = remember { mutableMapOf<Int, IntRange>() }
+    val selected = viewport.selectedCorner
+    LaunchedEffect(selected) {
+        if (!scrollable || selected == null) return@LaunchedEffect
+        // one frame later the expanded details are laid out and measured
+        withFrameNanos { }
+        val row = rows[selected.number] ?: return@LaunchedEffect
+        scrollToShow(row.first, row.last, scroll.value, scroll.viewportSize)?.let { scroll.animateScrollTo(it) }
+    }
+    Column((if (scrollable) modifier.verticalScroll(scroll) else modifier).background(RaceColors.Surface).padding(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             RaceLabel("Kurven", Modifier.weight(1f))
             val corners = state.cornerList()
@@ -110,7 +141,15 @@ fun CornerList(state: EngineerState, language: TipLanguage, viewport: AnalysisVi
         message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = RaceColors.TextMuted, modifier = Modifier.padding(vertical = 4.dp)) }
         val reports = (state as? EngineerState.Ready)?.debrief?.reports ?: return@Column
         val costliest = costliestCorners(reports)
-        reports.forEach { r -> CornerRow(r, reports, r.corner.number in costliest, viewport.selectedCorner == r.corner, compact, language) { viewport.toggleCorner(r.corner) } }
+        reports.forEach { r ->
+            CornerRow(
+                r, reports, r.corner.number in costliest, selected == r.corner, compact, language,
+                Modifier.onGloballyPositioned { c ->
+                    val top = c.positionInParent().y.toInt()
+                    rows[r.corner.number] = top..(top + c.size.height)
+                },
+            ) { viewport.toggleCorner(r.corner) }
+        }
     }
 }
 
@@ -122,10 +161,11 @@ private fun lossColor(ms: Int) = when {
 
 @Composable
 private fun CornerRow(
-    r: CornerReport, all: List<CornerReport>, costly: Boolean, selected: Boolean, compact: Boolean, language: TipLanguage, onClick: () -> Unit,
+    r: CornerReport, all: List<CornerReport>, costly: Boolean, selected: Boolean, compact: Boolean, language: TipLanguage,
+    modifier: Modifier, onClick: () -> Unit,
 ) {
     val numbers = digits(13.sp, raceFontFamily()).copy(fontWeight = FontWeight.SemiBold)
-    Column(Modifier.fillMaxWidth().background(if (selected) RaceColors.SurfaceRaised else Color.Transparent).clickable(onClick = onClick)) {
+    Column(modifier.fillMaxWidth().background(if (selected) RaceColors.SurfaceRaised else Color.Transparent).clickable(onClick = onClick)) {
         Row(Modifier.padding(horizontal = 4.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(markerLabel(r.corner.number), style = numbers, modifier = Modifier.width(34.dp))
             Box(Modifier.size(6.dp).clip(CircleShape).background(if (costly) RaceColors.Accent else Color.Transparent))
