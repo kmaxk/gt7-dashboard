@@ -63,6 +63,10 @@ fun stepCorner(corners: List<Corner>, selected: Corner?, direction: Int): Corner
     return corners[(i + direction.coerceIn(-1, 1)).coerceIn(0, corners.lastIndex)]
 }
 
+/** The corner whose start..end contains [distanceM]; null on a straight, before the first corner or without a distance. */
+fun cornerAt(corners: List<Corner>, distanceM: Float?): Corner? =
+    distanceM?.let { d -> corners.firstOrNull { d >= it.startM && d <= it.endM } }
+
 /** Numbers of the [count] corners that lose the most time; corners without a loss never count. */
 fun costliestCorners(reports: List<CornerReport>, count: Int = 3): Set<Int> =
     reports.filter { it.lossMs > 0 }.sortedByDescending { it.lossMs }.take(count).map { it.corner.number }.toSet()

@@ -175,6 +175,15 @@ class AnalysisViewport(val a: List<LapSample>, val b: List<LapSample>?) {
         range = cornerRange(corner, mode, a, full)
     }
 
+    /** Selects [corner] without touching the zoom, for the selection that follows the playback. */
+    fun followCorner(corner: Corner) {
+        selectedCorner = corner
+    }
+
+    /** The corner lap A is in at the playback clock; null on a straight or when the cursor was set by hand. */
+    fun cornerUnderPlayback(corners: List<Corner>): Corner? =
+        if (fromPlayback) cornerAt(corners, playbackFrame(a, b, playMs).cursorDistanceM) else null
+
     /** Moves the playback clock to [ms]; the chart cursor follows lap A. */
     fun seek(ms: Int) {
         playMs = ms.coerceIn(0, endMs)

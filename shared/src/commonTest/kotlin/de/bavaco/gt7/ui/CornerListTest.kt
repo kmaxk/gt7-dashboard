@@ -25,6 +25,17 @@ class CornerListTest {
     }
 
     @Test
+    fun cornerAtFindsTheCornerContainingTheDistance() {
+        assertEquals(cs[1], cornerAt(cs, 250f))
+        assertEquals(cs[0], cornerAt(cs, 100f))
+        assertEquals(cs[3], cornerAt(cs, 500f))
+        assertNull(cornerAt(cs, 50f))
+        assertNull(cornerAt(cs, 600f))
+        assertNull(cornerAt(emptyList(), 100f))
+        assertNull(cornerAt(cs, null))
+    }
+
+    @Test
     fun costliestCornersOnlyCountLosses() {
         assertEquals(setOf(4, 5, 1), costliestCorners(reports(560, 140, -20, 840, 820)))
         assertEquals(setOf(1), costliestCorners(reports(30, -10)))

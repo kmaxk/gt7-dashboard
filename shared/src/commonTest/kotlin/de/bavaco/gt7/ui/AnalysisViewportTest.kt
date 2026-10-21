@@ -120,4 +120,29 @@ class AnalysisViewportTest {
         assertEquals("T8", markerLabel(8))
         assertEquals("T12", markerLabel(12))
     }
+
+    @Test
+    fun followCornerSelectsWithoutZooming() {
+        val viewport = AnalysisViewport(lap, null)
+        val c = Corner(1, 60f, 100f, 160f)
+        viewport.zoom(2f)
+        val zoomed = viewport.range
+        viewport.followCorner(c)
+        assertEquals(c, viewport.selectedCorner)
+        assertEquals(zoomed, viewport.range)
+    }
+
+    @Test
+    fun cornerUnderPlaybackFollowsTheClockOnlyWhilePlayingBack() {
+        val viewport = AnalysisViewport(lap, null)
+        val corners = listOf(Corner(1, 40f, 50f, 60f), Corner(2, 120f, 130f, 140f))
+        viewport.moveCursor(50f)
+        assertNull(viewport.cornerUnderPlayback(corners))
+        viewport.seek(500)
+        assertEquals(corners[0], viewport.cornerUnderPlayback(corners))
+        viewport.seek(900)
+        assertNull(viewport.cornerUnderPlayback(corners))
+        viewport.moveCursor(130f)
+        assertNull(viewport.cornerUnderPlayback(corners))
+    }
 }

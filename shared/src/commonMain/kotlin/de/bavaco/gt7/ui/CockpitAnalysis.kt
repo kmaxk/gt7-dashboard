@@ -95,6 +95,9 @@ fun CockpitAnalysis(
     val header = cockpitHeader(picked.lapA, picked.sessionA, picked.pickedB, picked.sessionB, engineer, statsA, carName)
     val focus = remember { FocusRequester() }
     LaunchedEffect(viewport) { runCatching { focus.requestFocus() } }
+    // the list and the map follow the replay corner by corner; a straight keeps the last corner open
+    val replayCorner = viewport.cornerUnderPlayback(corners)
+    LaunchedEffect(replayCorner) { replayCorner?.let(viewport::followCorner) }
 
     BoxWithConstraints(modifier) {
     val mapRow = mapRowHeight(maxHeight.value).dp
