@@ -1,0 +1,25 @@
+.gradle/
+build/
+.idea/
+*.iml
+local.properties
+.DS_Store
+.kotlin/
+
+# signing keys and secrets – never commit
+*.jks
+*.keystore
+*.p12
+.env
+.env.*
+
+# app data: databases, recordings, exports, logs
+*.db
+*.db-wal
+*.db-shm
+*.gt7rec
+*.gt7export
+*.log
+
+# local tool state
+.superpowers/

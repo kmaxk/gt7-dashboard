@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- gradient of desktopApp/icons/app-icon.svg; the viewport is the icon's tile (100..924) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="824" android:viewportHeight="824">
+    <path android:pathData="M0,0h824v824h-824z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="0" android:endX="824" android:endY="824">
+                <item android:offset="0" android:color="#FF2A5CF0" />
+                <item android:offset="0.5" android:color="#FF0D2E95" />
+                <item android:offset="1" android:color="#FF050F38" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

@@ -1,0 +1,272 @@
+CREATE TABLE setting (
+    key TEXT NOT NULL PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+CREATE TABLE track (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    outline BLOB NOT NULL,
+    -- last column: added by migration 2; lap drawn as the track's line, null = fastest valid lap
+    line_lap_id INTEGER
+);
+
+CREATE TABLE driver (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+-- own car names, they win over cars.csv; added by migration 3
+CREATE TABLE car_name (
+    car_code INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE session (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    track_id INTEGER REFERENCES track(id),
+    car_code INTEGER NOT NULL,
+    started_at_ms INTEGER NOT NULL,
+    ended_at_ms INTEGER,
+    -- added by migration 1 via ALTER TABLE
+    driver_id INTEGER REFERENCES driver(id),
+    -- last column: added by migration 4; own name, null = none
+    name TEXT
+);
+
+CREATE TABLE lap (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    session_id INTEGER NOT NULL REFERENCES session(id),
+    number INTEGER NOT NULL,
+    time_ms INTEGER NOT NULL,
+    measured_ms INTEGER NOT NULL,
+    fuel_used REAL NOT NULL,
+    is_valid INTEGER NOT NULL,
+    -- last column: added by migration 4; at most one per driver and track, set by the user
+    is_reference INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE lap_sample (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    lap_id INTEGER NOT NULL REFERENCES lap(id),
+    time_ms INTEGER NOT NULL,
+    distance_m REAL NOT NULL,
+    speed_mps REAL NOT NULL,
+    throttle REAL NOT NULL,
+    brake REAL NOT NULL,
+    gear INTEGER NOT NULL,
+    rpm REAL NOT NULL,
+    x REAL NOT NULL,
+    z REAL NOT NULL,
+    boost_bar REAL NOT NULL
+);
+
+CREATE INDEX lap_sample_lap_id ON lap_sample(lap_id);
+CREATE INDEX lap_session_id ON lap(session_id);
+
+lastInsertId:
+SELECT last_insert_rowid();
+
+insertSession:
+INSERT INTO session(driver_id, car_code, started_at_ms) VALUES (?, ?, ?);
+
+allDrivers:
+SELECT id, name FROM driver ORDER BY id;
+
+insertDriver:
+INSERT INTO driver(name) VALUES (?);
+
+renameDriver:
+UPDATE driver SET name = ? WHERE id = ?;
+
+deleteDriver:
+DELETE FROM driver WHERE id = ?;
+
+deleteSamplesOfDriver:
+DELETE FROM lap_sample WHERE lap_id IN (
+    SELECT l.id FROM lap l JOIN session s ON s.id = l.session_id WHERE s.driver_id = ?
+);
+
+deleteLapsOfDriver:
+DELETE FROM lap WHERE session_id IN (SELECT id FROM session WHERE driver_id = ?);
+
+deleteSessionsOfDriver:
+DELETE FROM session WHERE driver_id = ?;
+
+driversWithSessions:
+SELECT DISTINCT driver_id FROM session WHERE driver_id IS NOT NULL;
+
+endSession:
+UPDATE session SET ended_at_ms = ? WHERE id = ?;
+
+assignTrack:
+UPDATE session SET track_id = ? WHERE id = ?;
+
+insertTrack:
+INSERT INTO track(name, outline) VALUES (?, ?);
+
+allTracks:
+SELECT id, name, outline FROM track ORDER BY id;
+
+insertLap:
+INSERT INTO lap(session_id, number, time_ms, measured_ms, fuel_used, is_valid) VALUES (?, ?, ?, ?, ?, ?);
+
+insertSample:
+INSERT INTO lap_sample(lap_id, time_ms, distance_m, speed_mps, throttle, brake, gear, rpm, x, z, boost_bar)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+lastSessionStartForTrack:
+SELECT MAX(started_at_ms) FROM session WHERE track_id = ?;
+
+bestLapForDriverAndCar:
+SELECT lap.id, lap.time_ms, session.car_code, session.started_at_ms
+FROM lap JOIN session ON session.id = lap.session_id
+WHERE session.track_id = ? AND session.driver_id = ? AND session.car_code = ? AND lap.is_valid = 1
+ORDER BY lap.time_ms ASC, lap.id ASC LIMIT 1;
+
+bestLapForDriver:
+SELECT lap.id, lap.time_ms, session.car_code, session.started_at_ms
+FROM lap JOIN session ON session.id = lap.session_id
+WHERE session.track_id = ? AND session.driver_id = ? AND lap.is_valid = 1
+ORDER BY lap.time_ms ASC, lap.id ASC LIMIT 1;
+
+-- fastest valid lap on the track except one: the driver's reference lap first, then same driver and car, then same driver, then anyone
+comparisonLap:
+SELECT l.id, l.time_ms, d.name AS driver_name,
+       CASE WHEN s.driver_id = :driverId AND l.is_reference = 1 THEN 3
+            WHEN s.driver_id = :driverId AND s.car_code = :carCode THEN 2 WHEN s.driver_id = :driverId THEN 1 ELSE 0 END AS rank
+FROM lap l JOIN session s ON s.id = l.session_id LEFT JOIN driver d ON d.id = s.driver_id
+WHERE s.track_id = :trackId AND l.is_valid = 1 AND l.id != :excludeLapId
+ORDER BY rank DESC, l.time_ms ASC, l.id ASC
+LIMIT 1;
+
+-- per driver the fastest valid lap on the track (optionally one car); ties go to the earlier lap
+-- the chosen line lap if it still exists on the track, else the fastest valid lap on it by anyone
+trackLineLap:
+SELECT l.id FROM lap l JOIN session s ON s.id = l.session_id
+WHERE s.track_id = :trackId AND (l.is_valid = 1 OR l.id = (SELECT line_lap_id FROM track WHERE id = :trackId))
+ORDER BY l.id = (SELECT line_lap_id FROM track WHERE id = :trackId) DESC, l.time_ms ASC, l.id ASC LIMIT 1;
+
+trackSummaries:
+SELECT t.id, t.name, t.line_lap_id,
+       (SELECT COUNT(*) FROM lap l JOIN session s ON s.id = l.session_id WHERE s.track_id = t.id) AS lap_count,
+       (SELECT MAX(s.started_at_ms) FROM session s WHERE s.track_id = t.id) AS last_driven_ms
+FROM track t ORDER BY t.name COLLATE NOCASE, t.id;
+
+-- candidates for a track's line: its fastest valid laps
+lineCandidates:
+SELECT l.id, l.time_ms, d.name AS driver_name, s.started_at_ms
+FROM lap l JOIN session s ON s.id = l.session_id LEFT JOIN driver d ON d.id = s.driver_id
+WHERE s.track_id = ? AND l.is_valid = 1
+ORDER BY l.time_ms ASC, l.id ASC LIMIT 20;
+
+renameTrack:
+UPDATE track SET name = ? WHERE id = ?;
+
+setTrackLineLap:
+UPDATE track SET line_lap_id = ? WHERE id = ?;
+
+unassignTrack:
+UPDATE session SET track_id = NULL WHERE track_id = ?;
+
+deleteTrack:
+DELETE FROM track WHERE id = ?;
+
+leaderboard:
+SELECT d.id AS driver_id, d.name AS driver_name, l.time_ms, s.car_code, s.started_at_ms
+FROM lap l JOIN session s ON s.id = l.session_id JOIN driver d ON d.id = s.driver_id
+WHERE s.track_id = :trackId AND l.id = (
+    SELECT l2.id FROM lap l2 JOIN session s2 ON s2.id = l2.session_id
+    WHERE s2.track_id = :trackId AND s2.driver_id = s.driver_id AND l2.is_valid = 1
+      AND (:carCode IS NULL OR s2.car_code = :carCode)
+    ORDER BY l2.time_ms ASC, l2.id ASC LIMIT 1
+)
+ORDER BY l.time_ms ASC, l.id ASC;
+
+carsOnTrack:
+SELECT DISTINCT s.car_code FROM session s JOIN lap l ON l.session_id = s.id
+WHERE s.track_id = ? AND l.is_valid = 1 ORDER BY s.car_code;
+
+sessionSummaries:
+SELECT s.id, s.track_id, t.name AS track_name, s.car_code, s.started_at_ms, s.ended_at_ms, s.driver_id, d.name AS driver_name, s.name,
+       (SELECT MIN(l.time_ms) FROM lap l WHERE l.session_id = s.id AND l.is_valid = 1) AS best_lap_ms,
+       (SELECT COUNT(*) FROM lap l WHERE l.session_id = s.id) AS lap_count
+FROM session s LEFT JOIN track t ON t.id = s.track_id LEFT JOIN driver d ON d.id = s.driver_id
+ORDER BY s.started_at_ms DESC, s.id DESC;
+
+lapsForSession:
+SELECT id, session_id, number, time_ms, fuel_used, is_valid, is_reference FROM lap WHERE session_id = ? ORDER BY number, id;
+
+samplesForLap:
+SELECT time_ms, distance_m, speed_mps, throttle, brake, gear, rpm, x, z, boost_bar
+FROM lap_sample WHERE lap_id = ? ORDER BY id;
+
+allCarNames:
+SELECT car_code, name FROM car_name;
+
+upsertCarName:
+INSERT OR REPLACE INTO car_name(car_code, name) VALUES (?, ?);
+
+deleteCarName:
+DELETE FROM car_name WHERE car_code = ?;
+
+-- every car of a session with its laps and when its last session started, newest first
+drivenCars:
+SELECT s.car_code, COUNT(l.id) AS lap_count, MAX(s.started_at_ms) AS last_driven_ms
+FROM session s LEFT JOIN lap l ON l.session_id = s.id
+GROUP BY s.car_code ORDER BY last_driven_ms DESC, s.car_code;
+
+-- export/import: full rows of the source, name matching in the target
+exportTracks:
+SELECT id, name, outline, line_lap_id FROM track ORDER BY id;
+
+exportSessions:
+SELECT s.id, s.track_id, s.car_code, s.started_at_ms, s.ended_at_ms, d.name AS driver_name, s.name
+FROM session s LEFT JOIN driver d ON d.id = s.driver_id ORDER BY s.id;
+
+exportLaps:
+SELECT id, number, time_ms, measured_ms, fuel_used, is_valid, is_reference FROM lap WHERE session_id = ? ORDER BY id;
+
+driverIdByName:
+SELECT id FROM driver WHERE name = ? COLLATE NOCASE ORDER BY id LIMIT 1;
+
+sessionExists:
+SELECT COUNT(*) FROM session WHERE driver_id IS ? AND car_code = ? AND started_at_ms = ?;
+
+importSession:
+INSERT INTO session(driver_id, track_id, car_code, started_at_ms, ended_at_ms, name) VALUES (?, ?, ?, ?, ?, ?);
+
+selectSetting:
+SELECT value FROM setting WHERE key = ?;
+
+upsertSetting:
+INSERT OR REPLACE INTO setting(key, value) VALUES (?, ?);
+
+renameSession:
+UPDATE session SET name = ? WHERE id = ?;
+
+deleteSamplesOfSession:
+DELETE FROM lap_sample WHERE lap_id IN (SELECT id FROM lap WHERE session_id = ?);
+
+deleteLapsOfSession:
+DELETE FROM lap WHERE session_id = ?;
+
+deleteSession:
+DELETE FROM session WHERE id = ?;
+
+-- unmarks the reference lap of the driver of lap :lapId on that lap's track
+clearReferenceLike:
+UPDATE lap SET is_reference = 0 WHERE is_reference = 1 AND session_id IN (
+    SELECT s2.id FROM lap l1 JOIN session s1 ON s1.id = l1.session_id
+    JOIN session s2 ON s2.track_id = s1.track_id AND s2.driver_id IS s1.driver_id
+    WHERE l1.id = :lapId
+);
+
+setLapReference:
+UPDATE lap SET is_reference = ? WHERE id = ?;
+
+referenceLapForDriver:
+SELECT lap.id, lap.time_ms, session.car_code, session.started_at_ms
+FROM lap JOIN session ON session.id = lap.session_id
+WHERE session.track_id = ? AND session.driver_id = ? AND lap.is_reference = 1
+LIMIT 1;

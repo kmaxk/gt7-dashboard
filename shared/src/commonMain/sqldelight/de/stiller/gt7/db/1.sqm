@@ -1,0 +1,10 @@
+CREATE TABLE driver (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+INSERT INTO driver(name) VALUES ('Fahrer 1');
+
+ALTER TABLE session ADD COLUMN driver_id INTEGER REFERENCES driver(id);
+
+UPDATE session SET driver_id = (SELECT id FROM driver WHERE name = 'Fahrer 1');

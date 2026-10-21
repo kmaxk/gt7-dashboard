@@ -1,0 +1,1 @@
+ALTER TABLE track ADD COLUMN line_lap_id INTEGER;
