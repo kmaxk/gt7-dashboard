@@ -7,6 +7,8 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -16,6 +18,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import gt7dashboard.shared.generated.resources.Res
+import gt7dashboard.shared.generated.resources.barlow_condensed_bold
+import gt7dashboard.shared.generated.resources.barlow_condensed_medium
+import gt7dashboard.shared.generated.resources.barlow_condensed_regular
+import gt7dashboard.shared.generated.resources.barlow_condensed_semibold
+import org.jetbrains.compose.resources.Font
 
 /** The motorsport palette: carbon black, red accent, yellow/cyan for laps A/B, violet for best values. */
 object RaceColors {
@@ -65,9 +73,20 @@ fun raceColorScheme(): ColorScheme = darkColorScheme(
     error = RaceColors.Loss,
 )
 
-/** The app's typeface; Barlow Condensed once its font files are bundled, the platform font until then. */
+/** Barlow Condensed (SIL Open Font License, see composeResources/font/OFL.txt), loaded once by [Gt7Theme]. */
+private val LocalRaceFont = staticCompositionLocalOf<FontFamily> { FontFamily.Default }
+
+/** The app's typeface. */
 @Composable
-fun raceFontFamily(): FontFamily = FontFamily.Default
+fun raceFontFamily(): FontFamily = LocalRaceFont.current
+
+@Composable
+private fun loadRaceFont(): FontFamily = FontFamily(
+    Font(Res.font.barlow_condensed_regular, FontWeight.Normal),
+    Font(Res.font.barlow_condensed_medium, FontWeight.Medium),
+    Font(Res.font.barlow_condensed_semibold, FontWeight.SemiBold),
+    Font(Res.font.barlow_condensed_bold, FontWeight.Bold),
+)
 
 private fun Typography.withFamily(family: FontFamily) = Typography(
     displayLarge = displayLarge.copy(fontFamily = family), displayMedium = displayMedium.copy(fontFamily = family),
@@ -90,7 +109,8 @@ private val RaceShapes = Shapes(
 )
 
 /** Bold numbers with digits of equal width, so times line up. */
-fun digits(size: TextUnit, family: FontFamily = FontFamily.Default) = TextStyle(
+@Composable
+fun digits(size: TextUnit, family: FontFamily = raceFontFamily()) = TextStyle(
     fontFamily = family, fontWeight = FontWeight.Bold, fontSize = size, lineHeight = size, fontFeatureSettings = "tnum",
 )
 
@@ -107,10 +127,13 @@ fun Modifier.carbon(): Modifier = drawBehind {
 
 @Composable
 fun Gt7Theme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = raceColorScheme(),
-        typography = Typography().withFamily(raceFontFamily()),
-        shapes = RaceShapes,
-        content = content,
-    )
+    val font = loadRaceFont()
+    CompositionLocalProvider(LocalRaceFont provides font) {
+        MaterialTheme(
+            colorScheme = raceColorScheme(),
+            typography = Typography().withFamily(font),
+            shapes = RaceShapes,
+            content = content,
+        )
+    }
 }

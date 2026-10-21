@@ -94,8 +94,8 @@ fun CornerList(state: EngineerState, language: TipLanguage, viewport: AnalysisVi
         Row(verticalAlignment = Alignment.CenterVertically) {
             RaceLabel("Kurven", Modifier.weight(1f))
             val corners = state.cornerList()
-            TextButton(onClick = { viewport.step(corners, -1) }, enabled = corners.isNotEmpty()) { Text("◀") }
-            TextButton(onClick = { viewport.step(corners, 1) }, enabled = corners.isNotEmpty()) { Text("▶") }
+            TextButton(onClick = { viewport.step(corners, -1) }, enabled = corners.isNotEmpty()) { RaceIcon(RaceIconKind.Previous) }
+            TextButton(onClick = { viewport.step(corners, 1) }, enabled = corners.isNotEmpty()) { RaceIcon(RaceIconKind.Next) }
         }
         val message = when (state) {
             EngineerState.Computing -> EngineerText.computing(language)

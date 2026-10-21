@@ -1,5 +1,6 @@
 package de.stiller.gt7.ui
 
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -59,8 +60,8 @@ fun markerLabel(number: Int): String = "T$number"
 data class ChartOverlay(val markers: List<Pair<Int, Float>> = emptyList(), val shade: ClosedFloatingPointRange<Float>? = null)
 
 private val Grid = RaceColors.Line
-private val Label = TextStyle(color = RaceColors.TextMuted, fontSize = 10.sp)
-private val MarkerLabel = TextStyle(color = RaceColors.TextPrimary.copy(alpha = 0.67f), fontSize = 9.sp)
+private val Label = TextStyle(color = RaceColors.TextMuted, fontSize = 11.sp)
+private val MarkerLabel = TextStyle(color = RaceColors.TextPrimary.copy(alpha = 0.67f), fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
 private val Marker = RaceColors.TextPrimary.copy(alpha = 0.25f)
 private val Shade = RaceColors.TextPrimary.copy(alpha = 0.12f)
 private val Cursor = RaceColors.TextPrimary.copy(alpha = 0.8f)
@@ -87,6 +88,9 @@ fun LineChart(
     overlay: ChartOverlay = ChartOverlay(),
 ) {
     val measurer = rememberTextMeasurer()
+    val font = raceFontFamily()
+    val label = Label.copy(fontFamily = font)
+    val markerLabelStyle = MarkerLabel.copy(fontFamily = font)
     Column(modifier) {
         Row {
             Text(title, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
@@ -117,12 +121,12 @@ fun LineChart(
                 fun py(y: Float) = plot.top + plot.height - (y - y0) / (y1 - y0) * plot.height
                 for (y in yAxis) {
                     drawLine(Grid, Offset(plot.left, py(y)), Offset(plot.left + plot.width, py(y)))
-                    val t = measurer.measure(formatDecimal(y, yDec), Label)
+                    val t = measurer.measure(formatDecimal(y, yDec), label)
                     drawText(t, topLeft = Offset(plot.left - t.size.width - 4.dp.toPx(), py(y) - t.size.height / 2f))
                 }
                 for (x in xTicks) {
                     drawLine(Grid, Offset(px(x), plot.top), Offset(px(x), plot.top + plot.height))
-                    val t = measurer.measure(formatDecimal(x, xDec), Label)
+                    val t = measurer.measure(formatDecimal(x, xDec), label)
                     drawText(t, topLeft = Offset(px(x) - t.size.width / 2f, plot.top + plot.height + 2.dp.toPx()))
                 }
                 clipRect(plot.left, plot.top, plot.left + plot.width, plot.top + plot.height) {
@@ -130,7 +134,7 @@ fun LineChart(
                     for ((number, x) in overlay.markers) {
                         if (x < x0 || x > x1) continue
                         drawLine(Marker, Offset(px(x), plot.top), Offset(px(x), plot.top + plot.height))
-                        drawText(measurer.measure(markerLabel(number), MarkerLabel), topLeft = Offset(px(x) + 2.dp.toPx(), plot.top))
+                        drawText(measurer.measure(markerLabel(number), markerLabelStyle), topLeft = Offset(px(x) + 2.dp.toPx(), plot.top))
                     }
                     for (s in series) {
                         if (s.points.isEmpty()) continue

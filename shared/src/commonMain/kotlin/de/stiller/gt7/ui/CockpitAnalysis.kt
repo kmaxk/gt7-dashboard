@@ -1,5 +1,7 @@
 package de.stiller.gt7.ui
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
@@ -158,7 +160,11 @@ private fun Charts(viewport: AnalysisViewport, corners: List<Corner>, more: Bool
     if (b != null) chart("Zeitdifferenz A − B (s, positiv = A langsamer)", MainChartHeight) { listOf(Series(deltaSeries(delta, mode, a), RaceColors.LapA)) }
     chart("Tempo (km/h)", MainChartHeight) { lapSeries(a, b, mode) { it.speedMps * 3.6f } }
     chart("Gas / Bremse (%)", PedalChartHeight, 0f..100f) { throttleBrake(a, b, mode) }
-    TextButton(onClick = { onMore(!more) }) { Text(if (more) "▾ Weitere Kanäle" else "▸ Weitere Kanäle") }
+    TextButton(onClick = { onMore(!more) }) {
+        RaceIcon(if (more) RaceIconKind.Expand else RaceIconKind.Collapse)
+        Spacer(Modifier.width(6.dp))
+        Text("Weitere Kanäle")
+    }
     if (more) {
         chart("Gang", MoreChartHeight) { lapSeries(a, b, mode, steps = true) { it.gear.toFloat() } }
         chart("Drehzahl (U/min)", MoreChartHeight) { lapSeries(a, b, mode) { it.rpm } }

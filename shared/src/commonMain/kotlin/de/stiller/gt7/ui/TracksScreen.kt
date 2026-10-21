@@ -1,5 +1,7 @@
 package de.stiller.gt7.ui
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -139,7 +141,11 @@ private fun LinePicker(selected: Long?, candidates: List<LineCandidate>, onLine:
     val current = candidates.find { it.lapId == selected }
     val label = if (current == null) "Schnellste Runde (automatisch)" else candidateText(current)
     Box {
-        TextButton(onClick = { open = true }, enabled = candidates.isNotEmpty()) { Text("Streckenlinie: $label ▾") }
+        TextButton(onClick = { open = true }, enabled = candidates.isNotEmpty()) {
+            Text("Streckenlinie: $label")
+            Spacer(Modifier.width(6.dp))
+            RaceIcon(RaceIconKind.Expand, size = 8.dp)
+        }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             DropdownMenuItem(text = { Text("Schnellste Runde (automatisch)") }, onClick = { onLine(null); open = false })
             candidates.forEach { c -> DropdownMenuItem(text = { Text(candidateText(c)) }, onClick = { onLine(c.lapId); open = false }) }

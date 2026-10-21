@@ -54,7 +54,7 @@ fun PlaybackBar(viewport: AnalysisViewport, modifier: Modifier = Modifier) {
         }
     }
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        TextButton(onClick = { viewport.togglePlay() }) { Text(if (viewport.playing) "❚❚" else "▶") }
+        TextButton(onClick = { viewport.togglePlay() }) { RaceIcon(if (viewport.playing) RaceIconKind.Pause else RaceIconKind.Play, size = 12.dp) }
         Slider(
             value = viewport.playMs.toFloat(),
             onValueChange = { viewport.playing = false; viewport.seek(it.toInt()) },

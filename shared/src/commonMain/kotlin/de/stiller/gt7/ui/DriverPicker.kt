@@ -102,7 +102,7 @@ private fun PickerChip(title: String, value: String, dot: Color, scale: Float, m
             Text(title, fontSize = 14.sp * scale, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
             Box(Modifier.size(10.dp * scale).clip(CircleShape).background(dot))
             Text(value, fontSize = 14.sp * scale, fontWeight = FontWeight.SemiBold)
-            Text("▾", fontSize = 14.sp * scale, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+            RaceIcon(RaceIconKind.Expand, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), size = 10.dp * scale)
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) { menu { open = false } }
     }

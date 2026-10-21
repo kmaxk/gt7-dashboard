@@ -1,5 +1,12 @@
 package de.stiller.gt7.ui
 
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,4 +60,29 @@ fun RaceLabel(text: String, modifier: Modifier = Modifier, color: Color = RaceCo
 @Composable
 fun RaceNumber(text: String, color: Color = RaceColors.TextPrimary, size: TextUnit = 22.sp, modifier: Modifier = Modifier) {
     Text(text, modifier, style = digits(size, raceFontFamily()), color = color, maxLines = 1)
+}
+
+enum class RaceIconKind { Previous, Next, Play, Pause, Expand, Collapse }
+
+/**
+ * Small symbols drawn instead of font glyphs: Barlow Condensed has no ◀ ▶ ▾, and the platform's fallback turns them into
+ * colour emoji.
+ */
+@Composable
+fun RaceIcon(kind: RaceIconKind, modifier: Modifier = Modifier, color: Color = LocalContentColor.current, size: Dp = 10.dp) {
+    Canvas(modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        fun triangle(a: Offset, b: Offset, c: Offset) = drawPath(Path().apply { moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c.x, c.y); close() }, color)
+        when (kind) {
+            RaceIconKind.Previous -> triangle(Offset(w, 0f), Offset(w, h), Offset(0f, h / 2))
+            RaceIconKind.Next, RaceIconKind.Play -> triangle(Offset(0f, 0f), Offset(0f, h), Offset(w, h / 2))
+            RaceIconKind.Expand -> triangle(Offset(0f, h * 0.2f), Offset(w, h * 0.2f), Offset(w / 2, h * 0.85f))
+            RaceIconKind.Collapse -> triangle(Offset(w * 0.2f, 0f), Offset(w * 0.2f, h), Offset(w * 0.85f, h / 2))
+            RaceIconKind.Pause -> {
+                drawRect(color, Offset(w * 0.1f, 0f), Size(w * 0.3f, h))
+                drawRect(color, Offset(w * 0.6f, 0f), Size(w * 0.3f, h))
+            }
+        }
+    }
 }
