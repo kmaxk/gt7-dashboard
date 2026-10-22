@@ -23,7 +23,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
             packageName = "GT7 Dashboard"
-            packageVersion = "0.4.1"
+            packageVersion = "0.4.2"
             modules("java.sql")
             macOS {
                 bundleID = "de.bavaco.gt7dashboard"
