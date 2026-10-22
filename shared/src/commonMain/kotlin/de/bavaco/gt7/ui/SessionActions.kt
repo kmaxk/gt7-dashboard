@@ -25,7 +25,7 @@ fun SessionActions(session: SessionSummary, running: Boolean, onRename: (String)
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         TextButton(onClick = { name = session.name.orEmpty(); renaming = true }) { Text("Umbenennen") }
         TextButton(onClick = { deleting = true }, enabled = !running) { Text("Löschen") }
-        if (running) Text("läuft gerade", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+        if (running) Text("läuft gerade", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
     }
     if (renaming) {
         AlertDialog(

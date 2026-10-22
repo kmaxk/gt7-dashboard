@@ -75,4 +75,10 @@ class EngineerTextTest {
         assertEquals("±0 m", meterDiff(700.2f, 700f))
         assertEquals("–", meterDiff(null, 700f))
     }
+
+    @Test
+    fun spokenTipWritesUnitsOut() {
+        assertEquals("Kurve 4: 14 Meter später bremsen", EngineerText.spoken(report(4, 200, Cause.BrakeEarly(14)), DE))
+        assertEquals("Turn 4: carry 5 kilometers per hour more through the apex", EngineerText.spoken(report(4, 200, Cause.SlowApex(5)), EN))
+    }
 }

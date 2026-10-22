@@ -23,7 +23,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -43,6 +45,8 @@ fun App(
     controller: SessionController, repo: SessionRepository, carList: CarCatalog, transfer: DataTransfer, files: FilePicker,
     /** Phones: below 840 dp width or 480 dp height the layout turns compact. The desktop never does. */
     compactAllowed: Boolean = false,
+    /** Voice for the live tips; null where the platform has none (the setting is then hidden). */
+    speaker: Speaker? = null,
     /** True while the live tab is shown, e.g. to keep a phone's screen on. */
     onLiveVisible: (Boolean) -> Unit = {},
 ) {
@@ -53,7 +57,26 @@ fun App(
             var liveLayout by remember { mutableStateOf(if (repo.setting("liveLayout") == LiveLayout.Race.name) LiveLayout.Race else LiveLayout.Standard) }
             var unit by remember { mutableStateOf(if (repo.setting("unit") == "MPH") SpeedUnit.MPH else SpeedUnit.KMH) }
             var tipLanguage by remember { mutableStateOf(tipLanguageOf(repo.setting(TIP_LANGUAGE_SETTING))) }
+            var coachEnabled by remember { mutableStateOf(repo.setting(COACH_SETTING) != "off") }
+            var speechEnabled by remember { mutableStateOf(repo.setting(SPEECH_SETTING) == "on") }
             val scope = rememberCoroutineScope()
+            val speechVoices = remember { mutableStateMapOf<TipLanguage, String?>().apply { TipLanguage.entries.forEach { put(it, repo.setting(speechVoiceSetting(it))) } } }
+            if (speaker != null) {
+                val currentSpeech by rememberUpdatedState(coachEnabled && speechEnabled)
+                val currentLanguage by rememberUpdatedState(tipLanguage)
+                val currentVoice by rememberUpdatedState(speechVoices[tipLanguage])
+                LaunchedEffect(controller, speaker) {
+                    var spoken: Int? = null
+                    controller.coachTip.collect { tip ->
+                        // once per corner: the tip stays up until the apex
+                        if (tip == null) spoken = null
+                        else if (tip.report.corner.number != spoken) {
+                            spoken = tip.report.corner.number
+                            if (currentSpeech) speaker.speak(EngineerText.spoken(tip.report, currentLanguage), currentLanguage, currentVoice)
+                        }
+                    }
+                }
+            }
             // the list with the own names; reloaded after renaming and importing
             var cars by remember(carList) { mutableStateOf(carList.withCustom(repo.carNames())) }
             val reloadCars: () -> Unit = {
@@ -78,7 +101,7 @@ fun App(
                         }
                         Box(Modifier.fillMaxWidth().weight(1f)) {
                             when (tab) {
-                                0 -> LiveScreen(controller, unit, cars, liveLayout) {
+                                0 -> LiveScreen(controller, unit, cars, liveLayout, tipLanguage, coachEnabled) {
                                     liveLayout = it
                                     scope.launch(Dispatchers.Default) { repo.setSetting("liveLayout", it.name) }
                                 }
@@ -87,7 +110,21 @@ fun App(
                                 3 -> TracksScreen(controller, repo)
                                 4 -> CarsScreen(repo, cars, reloadCars)
                                 else -> SettingsScreen(
-                                    controller, transfer, files, unit, tipLanguage, onImported = reloadCars,
+                                    controller, transfer, files, unit, tipLanguage, coachEnabled, onImported = reloadCars,
+                                    speech = speaker?.let { SpeechSettings(speechEnabled, it.voices(tipLanguage), speechVoices[tipLanguage]) },
+                                    onVoiceChange = { v ->
+                                        speechVoices[tipLanguage] = v
+                                        val key = speechVoiceSetting(tipLanguage)
+                                        scope.launch(Dispatchers.Default) { repo.setSetting(key, v.orEmpty()) }
+                                    },
+                                    onSpeechChange = {
+                                        speechEnabled = it
+                                        scope.launch(Dispatchers.Default) { repo.setSetting(SPEECH_SETTING, if (it) "on" else "off") }
+                                    },
+                                    onCoachChange = {
+                                        coachEnabled = it
+                                        scope.launch(Dispatchers.Default) { repo.setSetting(COACH_SETTING, if (it) "on" else "off") }
+                                    },
                                     onTipLanguageChange = {
                                         tipLanguage = it
                                         scope.launch(Dispatchers.Default) { repo.setSetting(TIP_LANGUAGE_SETTING, it.name) }

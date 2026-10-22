@@ -39,7 +39,7 @@ enum class LiveLayout { Standard, Race }
 
 /** Live tab: collects the controller's state and shows [LiveDashboard] or [RaceDisplay], switchable top right. */
 @Composable
-fun LiveScreen(controller: SessionController, unit: SpeedUnit, cars: CarCatalog, layout: LiveLayout, onLayoutChange: (LiveLayout) -> Unit) {
+fun LiveScreen(controller: SessionController, unit: SpeedUnit, cars: CarCatalog, layout: LiveLayout, tipLanguage: TipLanguage, coachEnabled: Boolean, onLayoutChange: (LiveLayout) -> Unit) {
     val state by controller.live.collectAsState()
     val connection by controller.connection.collectAsState()
     val host by controller.ps5Host.collectAsState()
@@ -48,6 +48,7 @@ fun LiveScreen(controller: SessionController, unit: SpeedUnit, cars: CarCatalog,
     val opponent by controller.opponent.collectAsState()
     val reference by controller.reference.collectAsState()
     val trackLine by controller.trackLine.collectAsState()
+    val coachTip by controller.coachTip.collectAsState()
     val selection = DriverSelection(drivers, active, opponent, reference)
     Box(Modifier.fillMaxSize()) {
         when (layout) {
@@ -67,6 +68,7 @@ fun LiveScreen(controller: SessionController, unit: SpeedUnit, cars: CarCatalog,
                 ConnectionOverlay(connection, host, 1f, Modifier.matchParentSize())
             }
         }
+        if (coachEnabled) coachTip?.let { CoachBanner(it, tipLanguage, Modifier.align(Alignment.BottomCenter).padding(16.dp)) }
         Row(Modifier.align(Alignment.TopEnd).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             FilterChip(selected = layout == LiveLayout.Standard, onClick = { onLayoutChange(LiveLayout.Standard) }, label = { Text("Standard") })
             FilterChip(selected = layout == LiveLayout.Race, onClick = { onLayoutChange(LiveLayout.Race) }, label = { Text("Renn-Display") })

@@ -54,7 +54,13 @@ fun SettingsScreen(
     files: FilePicker,
     unit: SpeedUnit,
     tipLanguage: TipLanguage,
+    coachEnabled: Boolean,
+    /** Voice output; null where the platform has no voice. */
+    speech: SpeechSettings?,
     onImported: () -> Unit,
+    onCoachChange: (Boolean) -> Unit,
+    onSpeechChange: (Boolean) -> Unit,
+    onVoiceChange: (String?) -> Unit,
     onTipLanguageChange: (TipLanguage) -> Unit,
     onUnitChange: (SpeedUnit) -> Unit,
 ) {
@@ -91,6 +97,27 @@ fun SettingsScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(selected = tipLanguage == TipLanguage.DE, onClick = { onTipLanguageChange(TipLanguage.DE) }, label = { Text("Deutsch") })
             FilterChip(selected = tipLanguage == TipLanguage.EN, onClick = { onTipLanguageChange(TipLanguage.EN) }, label = { Text("English") })
+        }
+        Text("Live-Tipps vor Kurven, die in der letzten Runde Zeit gekostet haben", style = MaterialTheme.typography.bodySmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = coachEnabled, onClick = { onCoachChange(true) }, label = { Text("An") })
+            FilterChip(selected = !coachEnabled, onClick = { onCoachChange(false) }, label = { Text("Aus") })
+        }
+        if (speech != null) {
+            Text("Live-Tipps zusätzlich vorlesen", style = MaterialTheme.typography.bodySmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = speech.enabled, onClick = { onSpeechChange(true) }, label = { Text("An") })
+                FilterChip(selected = !speech.enabled, onClick = { onSpeechChange(false) }, label = { Text("Aus") })
+            }
+            if (speech.voices.isNotEmpty()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Stimme")
+                    FilterMenu(
+                        speech.voice?.takeIf { it in speech.voices } ?: "Standard",
+                        listOf<Pair<String, () -> Unit>>("Standard" to { onVoiceChange(null) }) + speech.voices.map { v -> v to { onVoiceChange(v) } },
+                    )
+                }
+            }
         }
 
         Text("Diagnose", style = MaterialTheme.typography.titleMedium)

@@ -30,6 +30,18 @@ object EngineerText {
         return "${corner(r.corner.number, l)}: $main – $cost ${seconds(r.lossMs, l)}$more"
     }
 
+    /** `Kurve 4: 14 m später bremsen`, the main cause only, for the live banner. */
+    fun liveTip(r: CornerReport, l: TipLanguage): String {
+        val main = r.causes.firstOrNull()?.let { cause(it, l) } ?: if (de(l)) "Linie prüfen" else "check your line"
+        return "${corner(r.corner.number, l)}: $main"
+    }
+
+    /** [liveTip] with units written out so a voice reads them: `Kurve 4: 14 Meter später bremsen`. */
+    fun spoken(r: CornerReport, l: TipLanguage): String =
+        liveTip(r, l)
+            .replace(Regex("(\\d+) m\\b"), if (de(l)) "$1 Meter" else "$1 meters")
+            .replace("km/h", if (de(l)) "Kilometer pro Stunde" else "kilometers per hour")
+
     fun cause(c: Cause, l: TipLanguage): String = when (c) {
         is Cause.BrakeEarly -> if (de(l)) "${c.meters} m später bremsen" else "brake ${c.meters} m later"
         is Cause.BrakeLate -> if (de(l)) "${c.meters} m früher bremsen" else "brake ${c.meters} m earlier"

@@ -153,8 +153,8 @@ class ReadmeScreenshots {
             Thread.sleep(500)
         }
         println("live: ${controller.live.value.distanceM} m, delta ${controller.live.value.deltaMs}, ref ${controller.reference.value?.timeMs}")
-        shot("live", 1600, 900, frames = 340, frameMs = 33, start = { gate.complete(Unit) }) { LiveScreen(controller, SpeedUnit.KMH, cars, LiveLayout.Standard) {} }
-        shot("live-race", 1600, 900) { LiveScreen(controller, SpeedUnit.KMH, cars, LiveLayout.Race) {} }
+        shot("live", 1600, 900, frames = 340, frameMs = 33, start = { gate.complete(Unit) }) { LiveScreen(controller, SpeedUnit.KMH, cars, LiveLayout.Standard, TipLanguage.DE, true) {} }
+        shot("live-race", 1600, 900) { LiveScreen(controller, SpeedUnit.KMH, cars, LiveLayout.Race, TipLanguage.DE, true) {} }
         scope.cancel()
 
 

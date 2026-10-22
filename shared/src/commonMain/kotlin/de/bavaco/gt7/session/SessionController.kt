@@ -103,6 +103,11 @@ class SessionController(
     /** Drivers that own sessions; deleting them also deletes their laps. */
     val driversWithSessions: StateFlow<Set<Long>> = _driversWithSessions.asStateFlow()
 
+    private val coach = LiveCoach()
+    private val _coachTip = MutableStateFlow<CoachTip?>(null)
+    /** The corner coming up that cost time last lap; null if none is near. */
+    val coachTip: StateFlow<CoachTip?> = _coachTip.asStateFlow()
+
     private var sourceJob: Job? = null
     private var discoverJob: Job? = null
     @Volatile private var hasSource = false
@@ -214,6 +219,7 @@ class SessionController(
                         // GT7 loads a track: the next session may be elsewhere, so a carried track no longer applies
                         if (tf.frame.loading) carryTrack = null
                         handle(engine.onFrame(tf.frame, tf.atMs))
+                        _coachTip.value = if (engine.live.value.sessionActive) coach.tipAt(engine.live.value.distanceM, tf.frame.speedMps) else null
                         if (sessionId != null && trackId == null && !tf.frame.loading) locator.add(tf.frame.x, tf.frame.z)
                     }
                 }
@@ -304,6 +310,7 @@ class SessionController(
         val session = sessionId
         if (session != null) db("save lap") { repo.saveLap(session, lap) }
         if (!lap.isValid) return
+        _reference.value?.samples?.let { coach.set(Engineer.analyze(lap.samples, it)) }
         val ref = referenceMs
         val driver = _activeDriver.value
         if (_opponent.value == Opponent.Self && driver != null && !referencePinned && (ref == null || lap.timeMs < ref)) {
@@ -506,6 +513,7 @@ class SessionController(
             is Opponent.Of -> o.driver
         }
         val best = db("load best lap") { repo.bestLap(track, owner.id, car) }
+        coach.set(null)
         if (best == null || best.samples.isEmpty()) return clearReference()
         setReference(best.samples, best.timeMs)
         referencePinned = best.isReference
@@ -513,6 +521,7 @@ class SessionController(
     }
 
     private fun clearReference() {
+        coach.set(null)
         setReference(null, null)
         referencePinned = false
         _reference.value = null

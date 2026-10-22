@@ -113,7 +113,7 @@ fun AnalysisScreen(
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { openId = null }) { Text("← Sitzungen") }
-                Text(sessionLine(open, cars), style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                Text(sessionLine(open, cars), style = MaterialTheme.typography.bodyLarge, maxLines = 2, modifier = Modifier.padding(end = 8.dp))
             }
             SessionActions(
                 open, running = open.id == activeSession,

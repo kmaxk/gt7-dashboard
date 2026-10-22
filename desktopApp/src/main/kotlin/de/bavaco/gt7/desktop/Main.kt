@@ -60,6 +60,6 @@ fun main() = application {
         scope.cancel()
         exitApplication()
     }, title = "GT7 Dashboard", icon = remember { BitmapPainter(useResource("app-icon.png", ::loadImageBitmap)) }) {
-        App(controller, repo, cars, transfer, remember { AwtFilePicker() })
+        App(controller, repo, cars, transfer, remember { AwtFilePicker() }, speaker = remember { MacSpeaker() })
     }
 }

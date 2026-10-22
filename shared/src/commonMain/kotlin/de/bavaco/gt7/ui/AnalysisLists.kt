@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -52,8 +54,9 @@ fun LapList(
     laps: List<LapSummary>, bestMs: Int?, picked: List<LapSummary>, onToggle: (LapSummary) -> Unit,
     modifier: Modifier = Modifier, onStar: ((LapSummary) -> Unit)? = null,
 ) {
+    CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodyLarge) {
     Column(modifier) {
-        Text("Runden", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(8.dp))
+        Text("Runden", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(8.dp))
         LazyColumn {
             items(laps, key = { it.id }) { lap ->
                 val idx = picked.indexOfFirst { it.id == lap.id }
@@ -81,10 +84,11 @@ fun LapList(
                         color = tint, fontFamily = FontFamily.Monospace,
                     )
                     Text("${formatDecimal(lap.fuelUsed, 1)} %", color = tint)
-                    if (lap.isReference) Text("REF", color = WarnAmber, style = MaterialTheme.typography.labelSmall)
-                    if (!lap.isValid) Text("ungültig", color = tint, style = MaterialTheme.typography.bodySmall)
+                    if (lap.isReference) Text("REF", color = WarnAmber, style = MaterialTheme.typography.labelMedium)
+                    if (!lap.isValid) Text("ungültig", color = tint, style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }
+    }
     }
 }
