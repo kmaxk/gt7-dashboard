@@ -14,9 +14,13 @@ Tempo, Gang mit Schaltblitz, Prognose und Delta zur Referenzrunde, Gas- und Brem
 
 ![Live-Tipp](docs/screenshots/live-tip.png)
 
-Das **Renn-Display** zeigt dasselbe groß und kontrastreich, mit Fahrhilfen, Öl- und Wassertemperatur und Tank:
+Das **Renn-Display** zeigt dasselbe groß und kontrastreich, mit Fahrhilfen, Öl- und Wassertemperatur und Tank – und den Rundenzeiten samt theoretischer Bestzeit der Sitzung (Summe der besten Sektoren):
 
 ![Renn-Display](docs/screenshots/live-race.png)
+
+Das Dashboard **Zeiten** zeigt nur das Wesentliche in sehr großer Schrift: die theoretische Bestzeit, das Delta und alle Rundenzeiten der Sitzung, die schnellste in Grün.
+
+![Zeiten](docs/screenshots/live-times.png)
 
 ### Analyse-Cockpit mit Renningenieur
 
