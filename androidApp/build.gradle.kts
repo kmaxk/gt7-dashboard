@@ -29,7 +29,7 @@ android {
         applicationId = "de.bavaco.gt7dashboard"
         minSdk = 26
         targetSdk = 36
-        versionName = providers.gradleProperty("versionName").getOrElse("0.4.0")
+        versionName = providers.gradleProperty("versionName").getOrElse("0.4.1")
         versionCode = providers.gradleProperty("versionCode").getOrElse("1").toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
