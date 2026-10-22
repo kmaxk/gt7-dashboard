@@ -52,6 +52,7 @@ fun RaceDisplay(
     unit: SpeedUnit,
     selection: DriverSelection,
     cars: CarCatalog,
+    theoreticalBestMs: Int? = null,
     onSelectDriver: (Long) -> Unit = {},
     onSelectOpponent: (Opponent) -> Unit = {},
     onCreateDriver: (String) -> Unit = {},
@@ -76,7 +77,7 @@ fun RaceDisplay(
                 CenterStack(state, unit, s, Modifier.weight(0.26f).fillMaxHeight())
                 Column(Modifier.weight(0.37f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(gap)) {
                     SessionPanel(state, s, Modifier.fillMaxWidth())
-                    LapTimes(state, labels.bestLabel, bestCellTimeMs(selection.reference, selection.opponent, f?.bestLapMs), s, Modifier.fillMaxWidth().weight(1f))
+                    LapTimes(state, labels.bestLabel, bestCellTimeMs(selection.reference, selection.opponent, f?.bestLapMs), theoreticalBestMs, s, Modifier.fillMaxWidth().weight(1f))
                 }
             }
             Row(Modifier.fillMaxWidth().height(96.dp * s), horizontalArrangement = Arrangement.spacedBy(gap)) {
@@ -249,7 +250,7 @@ private fun Stat(value: String, label: String, scale: Float) {
 }
 
 @Composable
-private fun LapTimes(state: LiveState, bestLabel: String, bestMs: Int?, scale: Float, modifier: Modifier) {
+private fun LapTimes(state: LiveState, bestLabel: String, bestMs: Int?, theoreticalMs: Int?, scale: Float, modifier: Modifier) {
     val f = state.frame
     val predicted = state.predictedLapMs
     val d = state.deltaMs
@@ -259,6 +260,7 @@ private fun LapTimes(state: LiveState, bestLabel: String, bestMs: Int?, scale: F
             TimeLine(formatLapTime(predicted ?: state.lapTimeMs), if (predicted != null) "PROGNOSE" else "AKTUELL", estColor, 46.sp * scale, scale)
             TimeLine(formatLapTime(f?.lastLapMs?.takeIf { it > 0 }), "LETZTE", Color.White, 36.sp * scale, scale)
             TimeLine(formatLapTime(bestMs), bestLabel, Color.White, 36.sp * scale, scale)
+            TimeLine(formatLapTime(theoreticalMs), "THEORETISCH", RaceColors.Best, 36.sp * scale, scale)
         }
     }
 }

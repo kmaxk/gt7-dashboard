@@ -24,6 +24,9 @@ data class CompletedLap(
     val samples: List<LapSample>,
 )
 
+/** A finished lap of the running session as the times display lists it. */
+data class LiveLap(val number: Int, val timeMs: Int, val isValid: Boolean)
+
 sealed interface SessionEvent {
     data class Started(val carCode: Int, val atMs: Long) : SessionEvent
     data class LapCompleted(val lap: CompletedLap) : SessionEvent

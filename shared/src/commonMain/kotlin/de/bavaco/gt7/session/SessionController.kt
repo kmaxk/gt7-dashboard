@@ -103,6 +103,14 @@ class SessionController(
     /** Drivers that own sessions; deleting them also deletes their laps. */
     val driversWithSessions: StateFlow<Set<Long>> = _driversWithSessions.asStateFlow()
 
+    private val _theoreticalBestMs = MutableStateFlow<Int?>(null)
+    /** Sum of the best sectors of the valid laps of the running session; null before the first valid lap. */
+    val theoreticalBestMs: StateFlow<Int?> = _theoreticalBestMs.asStateFlow()
+    private val _liveLaps = MutableStateFlow<List<LiveLap>>(emptyList())
+    /** Every lap of the running session in driving order, valid or not. */
+    val liveLaps: StateFlow<List<LiveLap>> = _liveLaps.asStateFlow()
+    private val sessionLaps = ArrayList<Pair<Int, List<LapSample>>>()
+
     private val coach = LiveCoach()
     private val _coachTip = MutableStateFlow<CoachTip?>(null)
     /** The corner coming up that cost time last lap; null if none is near. */
@@ -280,6 +288,9 @@ class SessionController(
                 sessionId = session
                 _activeSession.value = session
                 carCode = e.carCode
+                sessionLaps.clear()
+                _liveLaps.value = emptyList()
+                _theoreticalBestMs.value = null
                 _trackQuestion.value = null
                 _driversWithSessions.value = db("load drivers with sessions") { repo.driversWithSessions() } ?: _driversWithSessions.value
                 val carried = carryTrack
@@ -309,7 +320,10 @@ class SessionController(
     private fun onLap(lap: CompletedLap) {
         val session = sessionId
         if (session != null) db("save lap") { repo.saveLap(session, lap) }
+        _liveLaps.value += LiveLap(lap.number, lap.timeMs, lap.isValid)
         if (!lap.isValid) return
+        sessionLaps += lap.timeMs to lap.samples
+        _theoreticalBestMs.value = theoreticalBestOfLaps(sessionLaps)
         _reference.value?.samples?.let { coach.set(Engineer.analyze(lap.samples, it)) }
         val ref = referenceMs
         val driver = _activeDriver.value

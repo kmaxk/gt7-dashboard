@@ -54,7 +54,7 @@ fun App(
         Surface(Modifier.fillMaxSize().carbon(), color = androidx.compose.ui.graphics.Color.Transparent, contentColor = RaceColors.TextPrimary) {
             var tab by remember { mutableStateOf(0) }
             LaunchedEffect(tab) { onLiveVisible(tab == 0) }
-            var liveLayout by remember { mutableStateOf(if (repo.setting("liveLayout") == LiveLayout.Race.name) LiveLayout.Race else LiveLayout.Standard) }
+            var liveLayout by remember { mutableStateOf(LiveLayout.entries.firstOrNull { it.name == repo.setting("liveLayout") } ?: LiveLayout.Standard) }
             var unit by remember { mutableStateOf(if (repo.setting("unit") == "MPH") SpeedUnit.MPH else SpeedUnit.KMH) }
             var tipLanguage by remember { mutableStateOf(tipLanguageOf(repo.setting(TIP_LANGUAGE_SETTING))) }
             var coachEnabled by remember { mutableStateOf(repo.setting(COACH_SETTING) != "off") }

@@ -89,4 +89,23 @@ class LapStatsTest {
         assertEquals(29_000, theoreticalBest(listOf(listOf(10_000, 12_000, 9_000), listOf(11_000, 11_000, 8_000))))
         assertEquals(null, theoreticalBest(emptyList()))
     }
+
+    /** A 300 m lap at constant speed, the middle third taking [middleMs] and the others 1000 ms each. */
+    private fun lapWithMiddle(middleMs: Int): Pair<Int, List<LapSample>> {
+        val marks = listOf(0 to 0f, 1000 to 100f, 1000 + middleMs to 200f, 2000 + middleMs to 300f)
+        return (2000 + middleMs) to marks.map { (t, d) -> LapSample(t, d, 30f, 0f, 0f, 3, 0f, 0f, 0f, 0f) }
+    }
+
+    @Test
+    fun liveTheoreticalBestTakesTheBestSectors() {
+        assertEquals(null, theoreticalBestOfLaps(emptyList()))
+        val fast = lapWithMiddle(900) // 2900 ms
+        val slow = lapWithMiddle(1200) // 3200 ms: slower, same outer sectors
+        assertEquals(2900, theoreticalBestOfLaps(listOf(fast, slow)))
+    }
+
+    @Test
+    fun scaledSectorsAddUpToTheLapTime() {
+        assertEquals(3000, scaleSectors(listOf(1000, 1010, 1000), 3000).sum())
+    }
 }

@@ -89,3 +89,21 @@ fun theoreticalBest(sectors: List<List<Int>>): Int? {
     if (sectors.isEmpty()) return null
     return sectors.first().indices.sumOf { i -> sectors.minOf { it[i] } }
 }
+
+/**
+ * [measured] sector times stretched to add up to GT7's [lapTimeMs]: the samples' clock runs slightly apart from GT7's,
+ * and unscaled sectors could make the theoretical best slower than the lap itself.
+ */
+fun scaleSectors(measured: List<Int>, lapTimeMs: Int): List<Int> {
+    val total = measured.sum()
+    if (total <= 0 || lapTimeMs <= 0) return measured
+    val scaled = measured.dropLast(1).map { (it.toLong() * lapTimeMs / total).toInt() }
+    return scaled + (lapTimeMs - scaled.sum())
+}
+
+/** Theoretical best of valid [laps] (time in ms and samples); sector boundaries come from the fastest lap. Null without a usable lap. */
+fun theoreticalBestOfLaps(laps: List<Pair<Int, List<LapSample>>>): Int? {
+    val length = laps.minByOrNull { it.first }?.second?.lastOrNull()?.distanceM ?: return null
+    val boundaries = sectorBoundaries(length)
+    return theoreticalBest(laps.mapNotNull { (timeMs, samples) -> sectorTimes(samples, boundaries)?.let { scaleSectors(it, timeMs) } })
+}

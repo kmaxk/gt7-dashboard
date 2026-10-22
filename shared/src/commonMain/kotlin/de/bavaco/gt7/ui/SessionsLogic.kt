@@ -1,6 +1,7 @@
 package de.bavaco.gt7.ui
 
 import de.bavaco.gt7.session.LapSample
+import de.bavaco.gt7.session.scaleSectors
 import de.bavaco.gt7.session.sectorBoundaries
 import de.bavaco.gt7.session.sectorTimes
 import de.bavaco.gt7.session.theoreticalBest
@@ -76,23 +77,12 @@ data class LapTableStats(
     val theoreticalMs: Int?,
 )
 
-/**
- * [measured] sector times stretched to add up to GT7's [lapTimeMs]: the samples' clock runs slightly apart from GT7's,
- * and unscaled sectors could make the theoretical best slower than the lap itself.
- */
-private fun scaleTo(measured: List<Int>, lapTimeMs: Int): List<Int> {
-    val total = measured.sum()
-    if (total <= 0 || lapTimeMs <= 0) return measured
-    val scaled = measured.dropLast(1).map { (it.toLong() * lapTimeMs / total).toInt() }
-    return scaled + (lapTimeMs - scaled.sum())
-}
-
 /** Sector boundaries come from the session's fastest valid lap, so every lap of the session uses the same ones. */
 fun lapTableStats(laps: List<LapSummary>, samples: Map<Long, List<LapSample>>): LapTableStats {
     val fastest = laps.filter { it.isValid }.minByOrNull { it.timeMs }
     val length = (fastest ?: laps.firstOrNull())?.let { samples[it.id]?.lastOrNull()?.distanceM }
     val boundaries = length?.let { sectorBoundaries(it) }
-    val sectors = laps.associate { lap -> lap.id to boundaries?.let { b -> samples[lap.id]?.let { sectorTimes(it, b) } }?.let { scaleTo(it, lap.timeMs) } }
+    val sectors = laps.associate { lap -> lap.id to boundaries?.let { b -> samples[lap.id]?.let { sectorTimes(it, b) } }?.let { scaleSectors(it, lap.timeMs) } }
     val valid = laps.filter { it.isValid }.mapNotNull { sectors[it.id] }
     return LapTableStats(
         vmaxKmh = laps.associate { it.id to samples[it.id]?.let { s -> vmaxKmh(s) } },

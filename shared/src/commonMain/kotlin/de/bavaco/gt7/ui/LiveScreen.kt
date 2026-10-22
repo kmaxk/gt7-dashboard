@@ -35,7 +35,7 @@ import de.bavaco.gt7.session.isShiftPoint
 import de.bavaco.gt7.session.positionAtTime
 import de.bavaco.gt7.storage.CarCatalog
 
-enum class LiveLayout { Standard, Race }
+enum class LiveLayout { Standard, Race, Times }
 
 /** Live tab: collects the controller's state and shows [LiveDashboard] or [RaceDisplay], switchable top right. */
 @Composable
@@ -49,6 +49,8 @@ fun LiveScreen(controller: SessionController, unit: SpeedUnit, cars: CarCatalog,
     val reference by controller.reference.collectAsState()
     val trackLine by controller.trackLine.collectAsState()
     val coachTip by controller.coachTip.collectAsState()
+    val theoretical by controller.theoreticalBestMs.collectAsState()
+    val liveLaps by controller.liveLaps.collectAsState()
     val selection = DriverSelection(drivers, active, opponent, reference)
     Box(Modifier.fillMaxSize()) {
         when (layout) {
@@ -60,11 +62,15 @@ fun LiveScreen(controller: SessionController, unit: SpeedUnit, cars: CarCatalog,
             )
             LiveLayout.Race -> Box(Modifier.fillMaxSize()) {
                 RaceDisplay(
-                    state, unit, selection, cars,
+                    state, unit, selection, cars, theoretical,
                     onSelectDriver = controller::selectDriver,
                     onSelectOpponent = controller::selectOpponent,
                     onCreateDriver = controller::createDriver,
                 )
+                ConnectionOverlay(connection, host, 1f, Modifier.matchParentSize())
+            }
+            LiveLayout.Times -> Box(Modifier.fillMaxSize()) {
+                TimesDisplay(state, theoretical, liveLaps)
                 ConnectionOverlay(connection, host, 1f, Modifier.matchParentSize())
             }
         }
@@ -72,6 +78,7 @@ fun LiveScreen(controller: SessionController, unit: SpeedUnit, cars: CarCatalog,
         Row(Modifier.align(Alignment.TopEnd).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             FilterChip(selected = layout == LiveLayout.Standard, onClick = { onLayoutChange(LiveLayout.Standard) }, label = { Text("Standard") })
             FilterChip(selected = layout == LiveLayout.Race, onClick = { onLayoutChange(LiveLayout.Race) }, label = { Text("Renn-Display") })
+            FilterChip(selected = layout == LiveLayout.Times, onClick = { onLayoutChange(LiveLayout.Times) }, label = { Text("Zeiten") })
         }
     }
 }
