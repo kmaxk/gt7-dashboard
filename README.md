@@ -115,3 +115,7 @@ SCREENSHOT_DB=~/Library/Application\ Support/GT7Dashboard/gt7.db SCREENSHOT_OUT=
 ## Autoliste
 
 `shared/src/commonMain/composeResources/files/cars.csv` und `maker.csv` stammen aus der Community-Datenbank [ddm999/gt7info](https://github.com/ddm999/gt7info) (`_data/db/`). Aktualisieren: beide Dateien von dort neu laden; eigene Namen aus dem Tab „Autos“ gehen immer vor.
+
+## Lizenz
+
+[MIT](LICENSE)
