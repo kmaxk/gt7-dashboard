@@ -101,8 +101,9 @@ fun AnalysisScreen(
     val open = sessions.firstOrNull { it.id == openId }
     if (open == null) {
         // with lap A picked the overview offers only the sessions lap B may come from
+        // only sessions on a known track with at least one lap
         SessionOverview(
-            sessions, cars, overview, restrictTo = sessionA.takeIf { !filterOff },
+            sessions.filter { it.trackId != null && it.lapCount > 0 }, cars, overview, restrictTo = sessionA.takeIf { !filterOff },
             onClearRestriction = { filterOff = true }, onOpen = { openId = it }, modifier = Modifier.fillMaxSize(),
         )
         return

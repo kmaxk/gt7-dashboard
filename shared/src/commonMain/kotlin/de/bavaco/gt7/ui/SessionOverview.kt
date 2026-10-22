@@ -124,7 +124,7 @@ fun sessionLine(s: SessionSummary, cars: CarCatalog): String =
 
 @Composable
 private fun TrackFilterMenu(sessions: List<SessionSummary>, state: SessionOverviewState) {
-    val tracks = sessions.filter { it.lapCount > 0 }.mapNotNull { s -> s.trackId?.let { it to (s.trackName ?: "") } }.distinct().sortedBy { it.second.lowercase() }
+    val tracks = sessions.mapNotNull { s -> s.trackId?.let { it to (s.trackName ?: "") } }.distinct().sortedBy { it.second.lowercase() }
     val options = listOf<Pair<String, TrackFilter>>("Alle Strecken" to TrackFilter.All) +
         tracks.map { (id, name) -> name to TrackFilter.Of(id) } +
         (if (sessions.any { it.trackId == null }) listOf("Ohne Strecke" to TrackFilter.None) else emptyList())
