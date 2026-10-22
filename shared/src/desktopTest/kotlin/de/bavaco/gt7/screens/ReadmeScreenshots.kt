@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.use
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import de.bavaco.gt7.db.Gt7Database
+import de.bavaco.gt7.session.CoachTip
 import de.bavaco.gt7.session.Engineer
 import de.bavaco.gt7.session.LapSample
 import de.bavaco.gt7.session.SessionController
@@ -159,6 +160,9 @@ class ReadmeScreenshots {
 
 
         val debrief = Engineer.analyze(slow, fast)
+        debrief.tips.firstOrNull()?.let { tip ->
+            shot("live-tip", 640, 150) { Column(Modifier.padding(16.dp)) { CoachBanner(CoachTip(tip, 140), TipLanguage.DE) } }
+        }
         val comparison = repo.comparisonLap(4, 1, 3656, 14)
         val state = EngineerState.Ready(debrief, null, fast.last().timeMs)
         val all = sessions.filter { it.trackId == 4L }.flatMap { repo.laps(it.id) }
