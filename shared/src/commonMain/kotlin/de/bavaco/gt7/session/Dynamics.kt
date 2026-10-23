@@ -4,7 +4,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sign
 
-// first guesses, to be checked against real GT7 laps
+// first guesses, partly checked against a recording of GT7 laps (see COUNTER_STEER_RAD)
 private const val BRAKE_OFF = 0.05f
 private const val BRAKE_HIGH = 0.8f
 private const val TURN_IN = 0.15f
@@ -13,6 +13,9 @@ private const val THROTTLE_DRIVE = 0.5f
 private const val MIN_STEER_RAD = 0.035f // 2°
 private const val MIN_YAW = 0.05f
 private const val COUNTER_YAW = 0.2f
+// 20° at the steering wheel: in a direction change the wheel passes zero before the car does, which reads as
+// countersteering for up to 250 ms at small angles; above 20° it lasted at most 150 ms in recorded laps
+private const val COUNTER_STEER_RAD = 0.35f
 private const val TRAIL_WINDOW = 0.3f
 private const val G = 9.81f
 
@@ -112,7 +115,7 @@ object Dynamics {
         for (s in zone) {
             val steer = s.steeringRad
             val yaw = s.yawRate
-            val counter = steer != null && yaw != null && abs(steer) > MIN_STEER_RAD && abs(yaw) > COUNTER_YAW && steer.sign != yaw.sign
+            val counter = steer != null && yaw != null && abs(steer) > COUNTER_STEER_RAD && abs(yaw) > COUNTER_YAW && steer.sign != yaw.sign
             if (counter) {
                 val first = start ?: s.also { start = it }
                 longest = maxOf(longest, s.timeMs - first.timeMs)

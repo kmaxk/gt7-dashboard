@@ -218,14 +218,14 @@ class EngineerTest {
 
     @Test
     fun referenceWithoutDynamics() {
-        val own = dyn(releaseM = 135f, minFrontSlip = -0.2f, countersteerMs = 300, steerPerYaw = 2f, apexLatG = 1f, steerAtThrottlePct = 90)
+        val own = dyn(releaseM = 135f, minFrontSlip = -0.4f, countersteerMs = 300, steerPerYaw = 2f, apexLatG = 1f, steerAtThrottlePct = 90)
         val ref = dyn(releaseM = 150f)
         assertEquals(listOf(Cause.ReleaseEarly(15), Cause.LockUp, Cause.Oversteer(true)), Engineer.causes(m(own), m(ref), 200))
     }
 
     @Test
     fun causeOrderFollowsCornerPhase() {
-        val own = dyn(releaseMs = 100, apexLatG = 1.3f, maxRearSlip = 0.3f)
+        val own = dyn(releaseMs = 100, apexLatG = 1.3f, maxRearSlip = 0.5f)
         val ref = dyn(releaseMs = 400, apexLatG = 1.5f)
         assertEquals(
             listOf(Cause.BrakeEarly(20), Cause.ReleaseAbrupt(100, 400), Cause.GripUnused(1.3f, 1.5f), Cause.Wheelspin),

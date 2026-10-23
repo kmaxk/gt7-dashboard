@@ -79,10 +79,17 @@ class DynamicsTest {
 
     @Test
     fun countersteerDetected() {
-        val with = Dynamics.measure(zone { d -> At(steer = if (d in 250f..270f) -0.2f else 0.5f, yaw = 0.5f) }, corner)
-        assertTrue(assertNotNull(with.countersteerMs) >= 200)
+        val with = Dynamics.measure(zone { d -> At(steer = if (d in 250f..280f) -0.5f else 0.5f, yaw = 0.5f) }, corner)
+        assertEquals(300, with.countersteerMs)
         val without = Dynamics.measure(zone { At(steer = 0.5f, yaw = 0.5f) }, corner)
         assertEquals(0, without.countersteerMs)
+    }
+
+    @Test
+    fun directionChangeIsNoCountersteer() {
+        // the wheel passes zero before the car turns the other way: opposite signs, but at small angles only
+        val m = Dynamics.measure(zone { d -> At(steer = if (d < 250f) 0.5f else if (d < 290f) -0.3f else -0.5f, yaw = if (d < 290f) 0.5f else -0.5f) }, corner)
+        assertEquals(0, m.countersteerMs)
     }
 
     @Test

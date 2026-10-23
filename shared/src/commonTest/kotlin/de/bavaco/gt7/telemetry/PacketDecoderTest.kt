@@ -127,7 +127,7 @@ class PacketDecoderTest {
         }))
         assertEquals(50f, f.speedMps)
         assertEquals(0.5f, f.steeringRad)
-        assertEquals(9.81f, f.latAccel)
+        assertEquals(-9.81f, f.latAccel) // GT7: right positive, the frame: left positive
         assertEquals(-4f, f.longAccel)
         assertEquals(0.7f, f.yawRate)
     }

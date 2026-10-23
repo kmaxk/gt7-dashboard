@@ -54,12 +54,14 @@ private const val TIP_MIN_LOSS_MS = 50
 private const val MAX_TIPS = 5
 private const val RELEASE_TOLERANCE_M = 10f
 private const val ABRUPT_MIN_DIFF_MS = 150
-private const val LOCK_UP_SLIP = -0.15f
-private const val WHEELSPIN_SLIP = 0.15f
+// recorded laps: -15 to -21 % on the front axle in every hard braking with ABS, 15 to 28 % at the rear
+// leaving slow corners on full throttle; both are normal, not a lock-up or wheelspin
+private const val LOCK_UP_SLIP = -0.3f
+private const val WHEELSPIN_SLIP = 0.35f
 private const val HANDLING_FACTOR = 1.25f
 private const val GRIP_TOLERANCE_G = 0.1f
 private const val STEER_TOLERANCE_PCT = 20
-private const val COUNTERSTEER_MS = 200
+private const val COUNTERSTEER_MS = 300
 
 /** Explains where and why a lap loses time against a comparison lap, corner by corner. */
 object Engineer {

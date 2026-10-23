@@ -69,7 +69,8 @@ object PacketDecoder {
             ),
             steeringRad = if (b) finite(f32(p, 0x128)) else null,
             yawRate = finite(f32(p, 0x30)),
-            latAccel = if (b) finite(f32(p, 0x130)) else null,
+            // GT7's sway is positive to the right; negated so that left is positive as for steering and yaw rate
+            latAccel = if (b) finite(-f32(p, 0x130)) else null,
             longAccel = if (b) finite(f32(p, 0x138)) else null,
         )
     }
