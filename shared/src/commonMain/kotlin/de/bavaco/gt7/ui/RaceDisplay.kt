@@ -213,11 +213,15 @@ private fun Tire(tempC: Float?, slip: Float?, left: Boolean, scale: Float, modif
     }
     val slipText = slip?.let { "${formatDecimal(it * 100f, 0)}%" } ?: "–"
     val slipColor = if (isSlipAlertValue(slip)) BadRed else Color.LightGray
-    Row(modifier.fillMaxHeight(), horizontalArrangement = Arrangement.spacedBy(8.dp * scale, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
-        val temp: @Composable () -> Unit = { Text(tempC?.let { "${it.toInt()}°" } ?: "–", style = digits(32.sp * scale), color = Color.White, maxLines = 1) }
-        val block: @Composable () -> Unit = { Box(Modifier.width(18.dp * scale).height(46.dp * scale).clip(RoundedCornerShape(3.dp * scale)).background(color)) }
-        val slipLabel: @Composable () -> Unit = { Text(slipText, style = digits(18.sp * scale), color = slipColor, maxLines = 1) }
-        if (left) { temp(); block(); slipLabel() } else { slipLabel(); block(); temp() }
+    BoxWithConstraints(modifier.fillMaxHeight()) {
+        // large where there is room, shrunk to fit a small window: "104°", block and "31%" need about 230 × 96 dp
+        val k = scale * minOf(1f, maxWidth / (230.dp * scale), maxHeight / (96.dp * scale))
+        Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(8.dp * k, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+            val temp: @Composable () -> Unit = { Text(tempC?.let { "${it.toInt()}°" } ?: "–", style = digits(64.sp * k), color = Color.White, maxLines = 1) }
+            val block: @Composable () -> Unit = { Box(Modifier.width(26.dp * k).height(80.dp * k).clip(RoundedCornerShape(3.dp * k)).background(color)) }
+            val slipLabel: @Composable () -> Unit = { Text(slipText, style = digits(24.sp * k), color = slipColor, maxLines = 1) }
+            if (left) { temp(); block(); slipLabel() } else { slipLabel(); block(); temp() }
+        }
     }
 }
 
