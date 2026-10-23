@@ -174,6 +174,10 @@ private fun CornerRow(
             Text(markerLabel(r.corner.number), style = numbers, modifier = Modifier.width(34.dp))
             Box(Modifier.size(6.dp).clip(CircleShape).background(if (costly) RaceColors.Loss else Color.Transparent))
             Spacer(Modifier.width(8.dp))
+            handlingMark(r)?.let {
+                Text(it, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = RaceColors.Warn)
+                Spacer(Modifier.width(6.dp))
+            }
             if (compact) {
                 Text(
                     r.causes.firstOrNull()?.let { EngineerText.cause(it, language) } ?: "–",
@@ -197,6 +201,7 @@ private fun CornerRow(
                         "Gas ${meterDiff(r.throttleM, r.refThrottleM)} · Gang ${r.gear} / ${r.refGear}",
                     style = MaterialTheme.typography.labelSmall, color = RaceColors.TextMuted,
                 )
+                Text(dynamicsDetail(r), style = MaterialTheme.typography.labelSmall, color = RaceColors.TextMuted)
             }
         }
     }

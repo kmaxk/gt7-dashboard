@@ -157,7 +157,10 @@ private fun toneColor(tone: Tone): Color = when (tone) {
     Tone.Neutral -> RaceColors.TextPrimary
 }
 
-/** Delta, speed and throttle/brake always; gear, revs, boost and coasting folded under "Weitere Kanäle". */
+/**
+ * Delta, speed, throttle/brake and steering always; gear, revs, boost and coasting folded under "Weitere Kanäle",
+ * yaw rate, lateral acceleration and slip under "Fahrdynamik".
+ */
 @Composable
 private fun Charts(viewport: AnalysisViewport, corners: List<Corner>, more: Boolean, onMore: (Boolean) -> Unit) {
     val a = viewport.a
@@ -173,10 +176,37 @@ private fun Charts(viewport: AnalysisViewport, corners: List<Corner>, more: Bool
     if (b != null) chart("Zeitdifferenz A − B (s, positiv = A langsamer)", MainChartHeight) { listOf(Series(deltaSeries(delta, mode, a), RaceColors.LapA)) }
     chart("Tempo (km/h)", MainChartHeight) { lapSeries(a, b, mode) { it.speedMps * 3.6f } }
     chart("Gas / Bremse (%)", PedalChartHeight, 0f..100f) { throttleBrake(a, b, mode) }
+    val dynamics = remember(a, b) { hasDynamics(a) || (b != null && hasDynamics(b)) }
+    @Composable
+    fun dynamicsChart(title: String, series: () -> List<Series>) {
+        if (dynamics) {
+            chart(title, MoreChartHeight, series = series)
+        } else {
+            Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                Text(title, style = MaterialTheme.typography.labelMedium)
+                Text("Keine Lenk- und Dynamikdaten – Runde vor Version 0.6 aufgezeichnet", style = MaterialTheme.typography.bodySmall, color = RaceColors.TextMuted)
+            }
+        }
+    }
+    dynamicsChart("Lenkung (°)") { lapSeriesOf(a, b, mode) { it.steeringRad?.let { r -> r * DEG_PER_RAD } } }
+    var dynamicsOpen by remember { mutableStateOf(false) }
     TextButton(onClick = { onMore(!more) }) {
         RaceIcon(if (more) RaceIconKind.Expand else RaceIconKind.Collapse)
         Spacer(Modifier.width(6.dp))
         Text("Weitere Kanäle")
+    }
+    TextButton(onClick = { dynamicsOpen = !dynamicsOpen }) {
+        RaceIcon(if (dynamicsOpen) RaceIconKind.Expand else RaceIconKind.Collapse)
+        Spacer(Modifier.width(6.dp))
+        Text("Fahrdynamik")
+    }
+    if (dynamicsOpen) {
+        dynamicsChart("Gierrate (°/s)") { lapSeriesOf(a, b, mode) { it.yawRate?.let { r -> r * DEG_PER_RAD } } }
+        dynamicsChart("Querbeschleunigung (g)") { lapSeriesOf(a, b, mode) { it.latAccel?.let { g -> g / G } } }
+        dynamicsChart("Schlupf (%)") {
+            lapSeriesOf(a, b, mode) { it.slipFront?.let { s -> s * 100f } } +
+                lapSeriesOf(a, b, mode, dashed = true) { it.slipRear?.let { s -> s * 100f } }
+        }
     }
     if (more) {
         chart("Gang", MoreChartHeight) { lapSeries(a, b, mode, steps = true) { it.gear.toFloat() } }
@@ -185,6 +215,16 @@ private fun Charts(viewport: AnalysisViewport, corners: List<Corner>, more: Bool
         chart("Rollen (weder Gas noch Bremse)", MoreChartHeight, 0f..1f) { lapSeries(a, b, mode, steps = true) { coasting(it) } }
     }
 }
+
+private const val DEG_PER_RAD = 57.29578f
+private const val G = 9.81f
+
+/** Like [lapSeries] for a value a sample may lack: only samples that have it are drawn. */
+private fun lapSeriesOf(a: List<LapSample>, b: List<LapSample>?, mode: AxisMode, dashed: Boolean = false, f: (LapSample) -> Float?): List<Series> =
+    listOfNotNull(
+        Series(a.mapNotNull { s -> f(s)?.let { xOf(s, mode) to it } }, RaceColors.LapA, dashed),
+        b?.let { Series(it.mapNotNull { s -> f(s)?.let { v -> xOf(s, mode) to v } }, RaceColors.LapB, dashed) },
+    ).filter { it.points.isNotEmpty() }
 
 private fun lapSeries(a: List<LapSample>, b: List<LapSample>?, mode: AxisMode, steps: Boolean = false, f: (LapSample) -> Float): List<Series> =
     listOfNotNull(
