@@ -166,6 +166,21 @@ class SessionEngineTest {
     }
 
     @Test
+    fun pausedTimeIsNotLapTime() {
+        val d = driverInLap2()
+        d.drive(1000)
+        val before = d.engine.live.value.lapTimeMs
+        d.paused = true
+        repeat(300) { d.step() } // GT7 keeps sending while paused
+        assertEquals(before + 16, d.engine.live.value.lapTimeMs) // only the step into the pause
+        d.paused = false
+        d.step()
+        assertEquals(before + 16, d.engine.live.value.lapTimeMs) // the step out of the pause is paused time, too
+        d.step()
+        assertEquals(before + 32, d.engine.live.value.lapTimeMs)
+    }
+
+    @Test
     fun packetIdBackwardsInvalidatesLap() {
         val d = driverInLap2()
         d.drive(1000)

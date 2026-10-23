@@ -29,6 +29,7 @@ class SessionEngine {
     private var carCode = 0
     private var lastFrameAtMs = 0L
     private var prevPacketId = 0
+    private var prevPaused = false
     private var prevLastLapMs = 0
     private var currentLap = 0
     private val validFuelUsed = mutableListOf<Float>()
@@ -108,9 +109,10 @@ class SessionEngine {
     }
 
     private fun advance(frame: TelemetryFrame, atMs: Long, events: MutableList<SessionEvent>) {
-        // The step up to this frame belongs to the lap that was running before it.
+        // The step up to this frame belongs to the lap that was running before it; GT7 keeps sending while
+        // paused, and that time is not lap time.
         val dt = (atMs - lastFrameAtMs).coerceAtLeast(0)
-        lapMeasuredMs += dt
+        if (!prevPaused) lapMeasuredMs += dt
         if (frame.onTrack && !frame.paused) lapDistanceM += frame.speedMps * minOf(dt, MAX_STEP_MS) / 1000f
         if (frame.paused || frame.packetId < prevPacketId) lapInvalid = true
 
@@ -190,6 +192,7 @@ class SessionEngine {
     private fun remember(frame: TelemetryFrame, atMs: Long) {
         lastFrameAtMs = atMs
         prevPacketId = frame.packetId
+        prevPaused = frame.paused
         prevLastLapMs = frame.lastLapMs
     }
 
