@@ -1,29 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- track, kerb, ghost, car and "7" of desktopApp/icons/app-icon.svg without shadows and dashes -->
+<!-- bend, ghost and car of desktopApp/icons/app-icon.svg, scaled into the 66 dp safe zone of the adaptive icon -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="824" android:viewportHeight="824">
-    <group android:translateX="-100" android:translateY="-100">
-        <path android:pathData="M40,820 C280,820 400,640 520,500 S790,230 1000,210"
-            android:strokeColor="#FFFFFFFF" android:strokeWidth="150" android:strokeLineCap="round" />
-        <path android:pathData="M40,820 C280,820 400,640 520,500 S790,230 1000,210"
-            android:strokeColor="#FF1B2133" android:strokeWidth="128" android:strokeLineCap="round" />
-        <path android:pathData="M382,787 C472,712 522,632 572,572"
-            android:strokeColor="#FFE10600" android:strokeWidth="26" />
-        <path android:pathData="M676,234 a96,96 0 1,0 0.1,0 z">
-            <aapt:attr name="android:fillColor">
-                <gradient android:type="radial" android:centerX="676" android:centerY="330" android:gradientRadius="96">
-                    <item android:offset="0" android:color="#D97FE3FF" />
-                    <item android:offset="1" android:color="#007FE3FF" />
-                </gradient>
-            </aapt:attr>
-        </path>
-        <path android:pathData="M676,294 a36,36 0 1,0 0.1,0 z" android:fillColor="#FF7FE3FF" />
-        <path android:pathData="M452,530 a42,42 0 1,0 0.1,0 z" android:fillColor="#FFFFFFFF" />
-        <path android:pathData="M452,554 a18,18 0 1,0 0.1,0 z" android:fillColor="#FFE10600" />
-        <path android:pathData="M640,660 L870,660 L860,720 L760,880 L680,880 L776,724 L630,724 Z" android:fillColor="#FFFFFFFF" />
-        <path android:pathData="M560,760 L640,760 L628,784 L548,784 Z" android:fillColor="#B3FFFFFF" />
-        <path android:pathData="M520,812 L610,812 L598,836 L508,836 Z" android:fillColor="#73FFFFFF" />
+    <group android:pivotX="412" android:pivotY="412" android:scaleX="0.62" android:scaleY="0.62">
+        <group android:translateX="-100" android:translateY="-100">
+            <path android:pathData="M232,742 C560,742 464,282 792,282"
+                android:strokeColor="#FFFFFFFF" android:strokeWidth="64" android:strokeLineCap="round" />
+            <path android:pathData="M555,381 a50,50 0 1,0 0.1,0 z" android:fillColor="#FF7FE3FF" />
+            <path android:pathData="M461,556 a50,50 0 1,0 0.1,0 z" android:fillColor="#FFFF3B30" />
+        </group>
     </group>
 </vector>
