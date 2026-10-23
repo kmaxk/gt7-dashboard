@@ -114,7 +114,8 @@ class SessionEngine {
         val dt = (atMs - lastFrameAtMs).coerceAtLeast(0)
         if (!prevPaused) lapMeasuredMs += dt
         if (frame.onTrack && !frame.paused) lapDistanceM += frame.speedMps * minOf(dt, MAX_STEP_MS) / 1000f
-        if (frame.paused || frame.packetId < prevPacketId) lapInvalid = true
+        // a pause leaves the lap valid: neither GT7 nor the measured time count it
+        if (frame.packetId < prevPacketId) lapInvalid = true
 
         pending?.let { if (frame.lastLapMs != it.lastLapMsBefore) events += finalize(it, frame.lastLapMs) }
         expirePending(atMs, events)

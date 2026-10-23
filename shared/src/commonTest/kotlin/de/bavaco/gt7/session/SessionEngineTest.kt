@@ -154,15 +154,17 @@ class SessionEngineTest {
     }
 
     @Test
-    fun pauseInvalidatesLap() {
+    fun pausedLapStaysValid() {
         val d = driverInLap2()
         d.drive(1000)
         d.paused = true
-        repeat(10) { d.step() }
+        repeat(300) { d.step() }
         d.paused = false
         d.drive(1000)
-        d.nextLap()
-        assertFalse(d.completed.single().isValid)
+        val measured = d.nextLap(offsetMs = -300 * 16) // GT7's lap time leaves the pause out, too
+        val lap = d.completed.single()
+        assertTrue(lap.isValid)
+        assertEquals(measured - 300 * 16, lap.timeMs)
     }
 
     @Test
