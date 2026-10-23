@@ -29,11 +29,14 @@ data class CornerDynamics(
     val trailM: Float?,
     /** Steering when the throttle passes 80 %, in % of the corner's largest steering angle. */
     val steerAtThrottlePct: Int?,
-    /** Mean steering per yaw rate from turn-in to apex: more means the car turns less for the same lock. */
+    /**
+     * Mean steering per path curvature (steering × speed / yaw rate) from turn-in to apex: more means the car
+     * turns less for the same lock. Per curvature, not per yaw rate, so a slower lap does not look like understeer.
+     */
     val steerPerYaw: Float?,
     /** Longest stretch of steering against the rotation; 0 if none, null without steering data. */
     val countersteerMs: Int?,
-    /** Mean yaw rate per steering from apex to exit: more means the rear helps turning. */
+    /** Mean curvature per steering (yaw rate / (steering × speed)) from apex to exit: more means the rear helps turning. */
     val yawPerSteerExit: Float?,
     val apexLatG: Float?,
     /** Lowest front slip under braking (negative = locking). */
@@ -84,21 +87,21 @@ object Dynamics {
             releaseMs = releaseMs,
             trailM = trailM,
             steerAtThrottlePct = steerAtThrottle,
-            steerPerYaw = entry.ratios { steer, yaw -> steer / yaw },
+            steerPerYaw = entry.ratios { steer, yaw, v -> steer * v / yaw },
             countersteerMs = if (hasSteering) longestCountersteer(zone) else null,
-            yawPerSteerExit = exit.ratios { steer, yaw -> yaw / steer },
+            yawPerSteerExit = exit.ratios { steer, yaw, v -> yaw / (steer * v) },
             apexLatG = apex.latAccel?.let { abs(it) / G },
             minFrontSlip = zone.filter { it.brake > BRAKE_OFF }.mapNotNull { it.slipFront }.minOrNull(),
             maxRearSlip = zone.filter { it.throttle > THROTTLE_DRIVE }.mapNotNull { it.slipRear }.maxOrNull(),
         )
     }
 
-    /** Mean of [f](|steering|, |yaw rate|) over samples turning clearly enough to divide; null if none does. */
-    private fun List<LapSample>.ratios(f: (Float, Float) -> Float): Float? {
+    /** Mean of [f](|steering|, |yaw rate|, speed) over samples turning clearly enough to divide; null if none does. */
+    private fun List<LapSample>.ratios(f: (Float, Float, Float) -> Float): Float? {
         val values = mapNotNull { s ->
             val steer = s.steeringRad?.let(::abs) ?: return@mapNotNull null
             val yaw = s.yawRate?.let(::abs) ?: return@mapNotNull null
-            if (steer > MIN_STEER_RAD && yaw > MIN_YAW) f(steer, yaw) else null
+            if (steer > MIN_STEER_RAD && yaw > MIN_YAW && s.speedMps > 0f) f(steer, yaw, s.speedMps) else null
         }
         return if (values.isEmpty()) null else values.sum() / values.size
     }

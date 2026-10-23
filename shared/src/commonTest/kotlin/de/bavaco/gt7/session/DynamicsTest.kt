@@ -21,12 +21,14 @@ class DynamicsTest {
 
     private val corner = Corner(1, 0f, 200f, 400f)
 
+    private fun speed(d: Float) = 20f + abs(d - 200f) * 0.1f
+
     /** Samples every 10 m from 0 to 400 m; slowest at the apex (200 m), 100 ms apart. */
     private fun zone(at: (Float) -> At): List<LapSample> = (0..40).map { i ->
         val d = i * 10f
         val a = at(d)
         LapSample(
-            i * 100, d, 20f + abs(d - 200f) * 0.1f, a.throttle, a.brake, 3, 6000f, 0f, 0f, 0f,
+            i * 100, d, speed(d), a.throttle, a.brake, 3, 6000f, 0f, 0f, 0f,
             steeringRad = a.steer, yawRate = a.yaw, latAccel = a.lat, slipFront = a.slipFront, slipRear = a.slipRear,
         )
     }
@@ -91,10 +93,11 @@ class DynamicsTest {
     }
 
     @Test
-    fun steerPerYawAndYawPerSteer() {
-        val m = Dynamics.measure(zone { d -> At(steer = if (d in 100f..300f) 0.5f else 0f, yaw = 0.25f) }, corner)
-        assertEquals(2f, assertNotNull(m.steerPerYaw), 0.001f)
-        assertEquals(0.5f, assertNotNull(m.yawPerSteerExit), 0.001f)
+    fun steeringRatiosFollowCurvatureNotSpeed() {
+        // same radius (100 m) at every speed: yaw rate = speed / radius, steering constant
+        val m = Dynamics.measure(zone { d -> At(steer = if (d in 100f..300f) 0.5f else 0f, yaw = speed(d) / 100f) }, corner)
+        assertEquals(50f, assertNotNull(m.steerPerYaw), 0.01f)
+        assertEquals(0.02f, assertNotNull(m.yawPerSteerExit), 0.0001f)
     }
 
     @Test
