@@ -327,7 +327,8 @@ private fun FuelPanel(state: LiveState, scale: Float, modifier: Modifier) {
 @Composable
 private fun FuelBar(fraction: Float, scale: Float, modifier: Modifier) {
     Box(modifier.height(8.dp * scale).clip(RoundedCornerShape(1.dp * scale)).background(Dim)) {
-        Box(Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).fillMaxHeight().background(LedYellow))
+        // a broken packet can carry NaN, which a width fraction cannot take
+        Box(Modifier.fillMaxWidth(if (fraction.isFinite()) fraction.coerceIn(0f, 1f) else 0f).fillMaxHeight().background(LedYellow))
         Row(Modifier.fillMaxSize()) {
             repeat(4) { i ->
                 Box(Modifier.weight(1f).fillMaxHeight()) {
