@@ -26,12 +26,3 @@ fun shiftLights(rpm: Float, alertMin: Int, alertMax: Int, count: Int = SHIFT_LED
         }
     }
 }
-
-enum class TireState { Cold, Ok, Warm, Hot }
-
-fun tireState(tempC: Float): TireState = when {
-    tempC < 60f -> TireState.Cold
-    tempC < 95f -> TireState.Ok
-    tempC < 110f -> TireState.Warm
-    else -> TireState.Hot
-}

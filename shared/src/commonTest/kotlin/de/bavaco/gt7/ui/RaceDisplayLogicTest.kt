@@ -1,5 +1,7 @@
 package de.bavaco.gt7.ui
 
+import de.bavaco.gt7.session.TireState
+import de.bavaco.gt7.session.tireState
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

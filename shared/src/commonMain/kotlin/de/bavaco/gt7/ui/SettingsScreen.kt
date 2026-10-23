@@ -104,7 +104,7 @@ fun SettingsScreen(
             FilterChip(selected = !coachEnabled, onClick = { onCoachChange(false) }, label = { Text("Aus") })
         }
         if (speech != null) {
-            Text("Live-Tipps zusätzlich vorlesen", style = MaterialTheme.typography.bodySmall)
+            Text("Live-Tipps zusätzlich vorlesen, dazu Rundenzeit, Sprit und Reifen", style = MaterialTheme.typography.bodySmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = speech.enabled, onClick = { onSpeechChange(true) }, label = { Text("An") })
                 FilterChip(selected = !speech.enabled, onClick = { onSpeechChange(false) }, label = { Text("Aus") })

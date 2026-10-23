@@ -1,7 +1,9 @@
 package de.bavaco.gt7.ui
 
+import de.bavaco.gt7.session.Axle
 import de.bavaco.gt7.session.Cause
 import de.bavaco.gt7.session.CornerReport
+import de.bavaco.gt7.session.RaceCall
 import de.bavaco.gt7.storage.ComparisonBasis
 import de.bavaco.gt7.storage.ComparisonLap
 import kotlin.math.abs
@@ -41,6 +43,51 @@ object EngineerText {
         liveTip(r, l)
             .replace(Regex("(\\d+) m\\b"), if (de(l)) "$1 Meter" else "$1 meters")
             .replace("km/h", if (de(l)) "Kilometer pro Stunde" else "kilometers per hour")
+
+    /** A race call as one spoken announcement, e.g. `1 Minute 57,0 – 0,3 Sekunden schneller. Noch 3 Runden.` */
+    fun spoken(call: RaceCall, l: TipLanguage): String = when (call) {
+        is RaceCall.LapDone -> buildList {
+            val time = spokenLapTime(call.timeMs, l)
+            add(
+                when {
+                    !call.valid -> if (de(l)) "$time, ungültig" else "$time, invalid"
+                    call.deltaMs == null -> time
+                    else -> "$time – ${spokenDelta(call.deltaMs, l)}"
+                },
+            )
+            call.lapsLeft?.let {
+                add(if (it == 1) (if (de(l)) "Letzte Runde" else "Final lap") else if (de(l)) "Noch $it Runden" else "$it laps to go")
+            }
+            call.fuelShortLaps?.let {
+                val laps = tenths(it, l)
+                add(if (de(l)) "Sprit fehlt für $laps Runden – Sprit sparen" else "Fuel short by $laps laps – save fuel")
+            }
+        }.joinToString(". ", postfix = ".")
+        is RaceCall.TiresHot -> when (call.axle) {
+            Axle.Front -> if (de(l)) "Vorderreifen überhitzen – sanfter einlenken." else "Front tyres overheating – turn in more gently."
+            Axle.Rear -> if (de(l)) "Hinterreifen überhitzen – sanfter ans Gas." else "Rear tyres overheating – easier on the throttle."
+            Axle.Both -> if (de(l)) "Reifen überhitzen – etwas Tempo rausnehmen." else "Tyres overheating – back off a little."
+        }
+        RaceCall.TiresCold -> if (de(l)) "Reifen noch kalt – vorsichtig bremsen." else "Tyres still cold – brake gently."
+    }
+
+    /** `1 Minute 57,0`, `2 Minuten 3,4`, `58,2 Sekunden`: tenths, units written out for the voice. */
+    private fun spokenLapTime(ms: Int, l: TipLanguage): String {
+        val totalTenths = (ms + 50) / 100
+        val minutes = totalTenths / 600
+        val seconds = tenths((totalTenths % 600) / 10f, l)
+        if (minutes == 0) return if (de(l)) "$seconds Sekunden" else "$seconds seconds"
+        val unit = if (de(l)) (if (minutes == 1) "Minute" else "Minuten") else if (minutes == 1) "minute" else "minutes"
+        return "$minutes $unit $seconds"
+    }
+
+    private fun spokenDelta(ms: Int, l: TipLanguage): String {
+        if (abs(ms) < 50) return if (de(l)) "gleich schnell wie die Referenz" else "level with the reference"
+        val s = tenths(abs(ms) / 1000f, l)
+        return if (ms < 0) (if (de(l)) "$s Sekunden schneller" else "$s seconds faster") else if (de(l)) "$s Sekunden langsamer" else "$s seconds slower"
+    }
+
+    private fun tenths(value: Float, l: TipLanguage) = formatDecimal(value, 1).let { if (de(l)) it.replace('.', ',') else it }
 
     fun cause(c: Cause, l: TipLanguage): String = when (c) {
         is Cause.BrakeEarly -> if (de(l)) "${c.meters} m später bremsen" else "brake ${c.meters} m later"

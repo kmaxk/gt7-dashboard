@@ -18,8 +18,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -115,6 +118,11 @@ class SessionController(
     private val _coachTip = MutableStateFlow<CoachTip?>(null)
     /** The corner coming up that cost time last lap; null if none is near. */
     val coachTip: StateFlow<CoachTip?> = _coachTip.asStateFlow()
+
+    private val raceCalls = RaceCalls()
+    private val _raceCall = MutableSharedFlow<RaceCall>(extraBufferCapacity = 8)
+    /** Lap, fuel and tyre announcements of the running session, as they happen. */
+    val raceCall: SharedFlow<RaceCall> = _raceCall.asSharedFlow()
 
     private var sourceJob: Job? = null
     private var discoverJob: Job? = null
@@ -228,6 +236,7 @@ class SessionController(
                         if (tf.frame.loading) carryTrack = null
                         handle(engine.onFrame(tf.frame, tf.atMs))
                         _coachTip.value = if (engine.live.value.sessionActive) coach.tipAt(engine.live.value.distanceM, tf.frame.speedMps) else null
+                        if (engine.live.value.sessionActive) raceCalls.onFrame(tf.frame, tf.atMs)?.let { _raceCall.tryEmit(it) }
                         if (sessionId != null && trackId == null && !tf.frame.loading) locator.add(tf.frame.x, tf.frame.z)
                     }
                 }
@@ -289,6 +298,7 @@ class SessionController(
                 _activeSession.value = session
                 carCode = e.carCode
                 sessionLaps.clear()
+                raceCalls.reset()
                 _liveLaps.value = emptyList()
                 _theoreticalBestMs.value = null
                 _trackQuestion.value = null
@@ -321,6 +331,9 @@ class SessionController(
         val session = sessionId
         if (session != null) db("save lap") { repo.saveLap(session, lap) }
         _liveLaps.value += LiveLap(lap.number, lap.timeMs, lap.isValid)
+        // before a faster lap replaces the reference: the gap is to the one this lap was driven against
+        val live = engine.live.value
+        if (live.sessionActive) _raceCall.tryEmit(raceCalls.lapDone(lap, referenceMs, live))
         if (!lap.isValid) return
         sessionLaps += lap.timeMs to lap.samples
         _theoreticalBestMs.value = theoreticalBestOfLaps(sessionLaps)

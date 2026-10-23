@@ -1,8 +1,10 @@
 package de.bavaco.gt7.ui
 
+import de.bavaco.gt7.session.Axle
 import de.bavaco.gt7.session.Cause
 import de.bavaco.gt7.session.Corner
 import de.bavaco.gt7.session.CornerReport
+import de.bavaco.gt7.session.RaceCall
 import de.bavaco.gt7.storage.ComparisonBasis
 import de.bavaco.gt7.storage.ComparisonLap
 import de.bavaco.gt7.ui.TipLanguage.DE
@@ -80,5 +82,23 @@ class EngineerTextTest {
     fun spokenTipWritesUnitsOut() {
         assertEquals("Kurve 4: 14 Meter später bremsen", EngineerText.spoken(report(4, 200, Cause.BrakeEarly(14)), DE))
         assertEquals("Turn 4: carry 5 kilometers per hour more through the apex", EngineerText.spoken(report(4, 200, Cause.SlowApex(5)), EN))
+    }
+
+    @Test
+    fun spokenLapCalls() {
+        val race = RaceCall.LapDone(117_040, true, -300, 3, 0.43f)
+        assertEquals("1 Minute 57,0 – 0,3 Sekunden schneller. Noch 3 Runden. Sprit fehlt für 0,4 Runden – Sprit sparen.", EngineerText.spoken(race, DE))
+        assertEquals("1 minute 57.0 – 0.3 seconds faster. 3 laps to go. Fuel short by 0.4 laps – save fuel.", EngineerText.spoken(race, EN))
+        assertEquals("2 Minuten 3,5 – 1,2 Sekunden langsamer. Letzte Runde.", EngineerText.spoken(RaceCall.LapDone(123_456, true, 1_200, 1, null), DE))
+        assertEquals("58,2 Sekunden – gleich schnell wie die Referenz.", EngineerText.spoken(RaceCall.LapDone(58_200, true, 30, null, null), DE))
+        assertEquals("1 Minute 0,0, ungültig.", EngineerText.spoken(RaceCall.LapDone(59_990, false, null, null, null), DE))
+        assertEquals("1 Minute 30,0.", EngineerText.spoken(RaceCall.LapDone(90_000, true, null, null, null), DE))
+    }
+
+    @Test
+    fun spokenTyreCalls() {
+        assertEquals("Vorderreifen überhitzen – sanfter einlenken.", EngineerText.spoken(RaceCall.TiresHot(Axle.Front), DE))
+        assertEquals("Rear tyres overheating – easier on the throttle.", EngineerText.spoken(RaceCall.TiresHot(Axle.Rear), EN))
+        assertEquals("Reifen noch kalt – vorsichtig bremsen.", EngineerText.spoken(RaceCall.TiresCold, DE))
     }
 }

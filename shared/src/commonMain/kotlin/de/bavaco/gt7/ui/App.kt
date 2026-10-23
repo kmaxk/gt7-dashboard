@@ -76,6 +76,11 @@ fun App(
                         }
                     }
                 }
+                LaunchedEffect(controller, speaker) {
+                    controller.raceCall.collect { call ->
+                        if (currentSpeech) speaker.speak(EngineerText.spoken(call, currentLanguage), currentLanguage, currentVoice)
+                    }
+                }
             }
             // the list with the own names; reloaded after renaming and importing
             var cars by remember(carList) { mutableStateOf(carList.withCustom(repo.carNames())) }

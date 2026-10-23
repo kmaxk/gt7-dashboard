@@ -10,7 +10,7 @@ Tempo, Gang mit Schaltblitz, Prognose und Delta zur Referenzrunde, Gas- und Brem
 
 ![Live-Dashboard](docs/screenshots/live.png)
 
-**Live-Tipps:** Nach jeder Runde merkt sich der Renningenieur die Kurven, die gegenüber der Referenzrunde Zeit gekostet haben. In der nächsten Runde blendet er vor der Kurve einen Tipp ein – auf Wunsch liest er ihn auch vor (macOS und Android, Stimme in den Einstellungen wählbar).
+**Live-Tipps:** Nach jeder Runde merkt sich der Renningenieur die Kurven, die gegenüber der Referenzrunde Zeit gekostet haben. In der nächsten Runde blendet er vor der Kurve einen Tipp ein – auf Wunsch liest er ihn auch vor (macOS und Android, Stimme in den Einstellungen wählbar). Mit Sprachausgabe sagt er außerdem an der Ziellinie Rundenzeit, Abstand zur Referenz und die restlichen Runden an, warnt, wenn der Sprit nicht bis ins Ziel reicht, und meldet überhitzte oder kalte Reifen.
 
 ![Live-Tipp](docs/screenshots/live-tip.png)
 

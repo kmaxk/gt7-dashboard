@@ -29,7 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.bavaco.gt7.session.LiveState
 import de.bavaco.gt7.session.Opponent
+import de.bavaco.gt7.session.TireState
 import de.bavaco.gt7.session.isShiftPoint
+import de.bavaco.gt7.session.tireState
 import de.bavaco.gt7.storage.CarCatalog
 import de.bavaco.gt7.telemetry.TelemetryFrame
 import kotlin.time.Clock
