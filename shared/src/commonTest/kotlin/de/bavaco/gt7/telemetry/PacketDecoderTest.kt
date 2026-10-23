@@ -112,4 +112,50 @@ class PacketDecoderTest {
         assertEquals(105f, f.oilTempC)
         assertEquals(CarFlags(lights = true, highBeam = true, asm = true, tcs = true, revLimiter = true, handBrake = false), f.carFlags)
     }
+
+    private fun packetB(block: PacketBuilder.() -> Unit) =
+        encryptForTest(plainPacket(PacketDecoder.PACKET_SIZE_B, block), 0x12345678, 0xDEADBEEF.toInt())
+
+    @Test
+    fun decodesPacketB() {
+        val f = assertNotNull(PacketDecoder.decode(packetB {
+            float(0x4C, 50f)
+            float(0x30, 0.7f)
+            float(0x128, 0.5f)
+            float(0x130, 9.81f)
+            float(0x138, -4f)
+        }))
+        assertEquals(50f, f.speedMps)
+        assertEquals(0.5f, f.steeringRad)
+        assertEquals(9.81f, f.latAccel)
+        assertEquals(-4f, f.longAccel)
+        assertEquals(0.7f, f.yawRate)
+    }
+
+    @Test
+    fun packetAHasYawButNoSteering() {
+        val f = assertNotNull(PacketDecoder.decode(encryptForTest(plainPacket { float(0x30, 0.7f) }, 0x12345678)))
+        assertEquals(0.7f, f.yawRate)
+        assertNull(f.steeringRad)
+        assertNull(f.latAccel)
+        assertNull(f.longAccel)
+    }
+
+    @Test
+    fun nonFiniteDynamicsBecomeNull() {
+        val f = assertNotNull(PacketDecoder.decode(packetB {
+            float(0x128, Float.NaN)
+            float(0x130, Float.POSITIVE_INFINITY)
+            float(0x30, Float.NaN)
+        }))
+        assertNull(f.steeringRad)
+        assertNull(f.latAccel)
+        assertNull(f.yawRate)
+    }
+
+    @Test
+    fun rejectsOtherLengths() {
+        assertNull(PacketDecoder.decode(encryptForTest(plainPacket(344), 0x12345678, 0x55FABB4F)))
+        assertNull(PacketDecoder.decode(encryptForTest(plainPacket(300), 0x12345678)))
+    }
 }

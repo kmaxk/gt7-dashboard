@@ -47,4 +47,11 @@ data class TelemetryFrame(
     val waterTempC: Float = 0f,
     val oilTempC: Float = 0f,
     val carFlags: CarFlags = CarFlags(),
+    /** Steering wheel angle in rad; packet type B only. */
+    val steeringRad: Float? = null,
+    /** Rotation about the vertical axis in rad/s. */
+    val yawRate: Float? = null,
+    /** Body accelerations in m/s² (sway, surge); packet type B only. */
+    val latAccel: Float? = null,
+    val longAccel: Float? = null,
 )

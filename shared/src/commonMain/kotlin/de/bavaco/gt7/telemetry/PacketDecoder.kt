@@ -1,16 +1,23 @@
 package de.bavaco.gt7.telemetry
 
-/** Decrypts and parses GT7 telemetry packets of type "A" (296 bytes). */
+/** Decrypts and parses GT7 telemetry packets of type "A" (296 bytes) and "B" (316 bytes: A plus steering and accelerations). */
 object PacketDecoder {
     const val PACKET_SIZE = 296
+    const val PACKET_SIZE_B = 316
     private const val MAGIC = 0x47375330
     private const val IV_MASK = 0xDEADBEAF.toInt()
+    private const val IV_MASK_B = 0xDEADBEEF.toInt()
     private val KEY = "Simulator Interface Packet GT7 ver 0.0".encodeToByteArray().copyOf(32)
 
     fun decode(raw: ByteArray): TelemetryFrame? {
-        if (raw.size != PACKET_SIZE) return null
+        val mask = when (raw.size) {
+            PACKET_SIZE -> IV_MASK
+            PACKET_SIZE_B -> IV_MASK_B
+            else -> return null
+        }
+        val b = raw.size == PACKET_SIZE_B
         val iv1 = i32(raw, 0x40)
-        val iv2 = iv1 xor IV_MASK
+        val iv2 = iv1 xor mask
         val nonce = ByteArray(8)
         for (i in 0 until 4) {
             nonce[i] = (iv2 ushr (8 * i)).toByte()
@@ -60,9 +67,14 @@ object PacketDecoder {
                 revLimiter = flags and 0x20 != 0,
                 handBrake = flags and 0x40 != 0,
             ),
+            steeringRad = if (b) finite(f32(p, 0x128)) else null,
+            yawRate = finite(f32(p, 0x30)),
+            latAccel = if (b) finite(f32(p, 0x130)) else null,
+            longAccel = if (b) finite(f32(p, 0x138)) else null,
         )
     }
 
+    private fun finite(v: Float): Float? = v.takeIf { it.isFinite() }
     private fun u8(b: ByteArray, o: Int) = b[o].toInt() and 0xFF
     private fun i16(b: ByteArray, o: Int) = ((u8(b, o + 1) shl 8) or u8(b, o)).toShort().toInt()
     private fun i32(b: ByteArray, o: Int) =
