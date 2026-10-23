@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -124,12 +125,17 @@ private fun DeltaBox(deltaMs: Int?, label: String, scale: Float, modifier: Modif
 
 /** Rounded, light-framed panel with an optional title set into the top edge. */
 @Composable
-private fun Section(title: String?, scale: Float, modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
+private fun Section(title: String?, scale: Float, modifier: Modifier, titleSize: Int = 12, content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier.clip(RoundedCornerShape(14.dp * scale)).border(1.5.dp * scale, Frame, RoundedCornerShape(14.dp * scale)).padding(10.dp * scale),
         verticalArrangement = Arrangement.spacedBy(4.dp * scale),
     ) {
-        if (title != null) Text(title, Modifier.fillMaxWidth(), fontSize = 12.sp * scale, color = Color.White, textAlign = TextAlign.Center, maxLines = 1)
+        if (title != null) {
+            Text(
+                title, Modifier.fillMaxWidth(), fontSize = titleSize.sp * scale, fontWeight = if (titleSize > 12) FontWeight.Bold else null,
+                color = Color.White, textAlign = TextAlign.Center, maxLines = 1,
+            )
+        }
         content()
     }
 }
@@ -162,7 +168,7 @@ private fun RowScope.Lamp(text: String, on: Boolean, color: Color, scale: Float)
 @Composable
 private fun Tires(state: LiveState, carName: String?, scale: Float, modifier: Modifier) {
     val t = state.frame?.tireTempC
-    Section("REIFEN", scale, modifier) {
+    Section("REIFEN", scale, modifier, titleSize = 15) {
         Box(Modifier.fillMaxWidth().weight(1f)) {
             Column(Modifier.fillMaxSize()) {
                 Row(Modifier.weight(1f)) {
@@ -195,11 +201,11 @@ private fun Tire(tempC: Float?, slip: Float?, left: Boolean, scale: Float, modif
         TireState.Hot -> BadRed
     }
     val slipText = slip?.let { "${formatDecimal(it * 100f, 0)}%" } ?: "–"
-    val slipColor = if (isSlipAlertValue(slip)) BadRed else Color.Gray
+    val slipColor = if (isSlipAlertValue(slip)) BadRed else Color.LightGray
     Row(modifier.fillMaxHeight(), horizontalArrangement = Arrangement.spacedBy(8.dp * scale, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
-        val temp: @Composable () -> Unit = { Text(tempC?.let { "${it.toInt()}°" } ?: "–", style = digits(22.sp * scale), color = Color.White) }
+        val temp: @Composable () -> Unit = { Text(tempC?.let { "${it.toInt()}°" } ?: "–", style = digits(32.sp * scale), color = Color.White, maxLines = 1) }
         val block: @Composable () -> Unit = { Box(Modifier.width(18.dp * scale).height(46.dp * scale).clip(RoundedCornerShape(3.dp * scale)).background(color)) }
-        val slipLabel: @Composable () -> Unit = { Text(slipText, fontSize = 12.sp * scale, color = slipColor) }
+        val slipLabel: @Composable () -> Unit = { Text(slipText, style = digits(18.sp * scale), color = slipColor, maxLines = 1) }
         if (left) { temp(); block(); slipLabel() } else { slipLabel(); block(); temp() }
     }
 }
@@ -283,9 +289,9 @@ private fun RowScope.ValueBox(label: String, value: String?, color: Color, scale
             .padding(6.dp * scale),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(label, fontSize = 11.sp * scale, color = color, maxLines = 1)
+        Text(label, fontSize = 15.sp * scale, fontWeight = FontWeight.Bold, color = color, maxLines = 1)
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            Text(value ?: "– –", style = digits(24.sp * scale), color = if (value == null) color.copy(alpha = 0.5f) else Color.White, maxLines = 1)
+            Text(value ?: "– –", style = digits(34.sp * scale), color = if (value == null) color.copy(alpha = 0.5f) else Color.White, maxLines = 1)
         }
     }
 }

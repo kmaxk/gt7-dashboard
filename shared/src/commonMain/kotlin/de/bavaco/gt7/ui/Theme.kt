@@ -40,6 +40,8 @@ object RaceColors {
     val Gain = Color(0xFF00E676)
     val Best = Color(0xFFB14CFF)
     val Warn = Color(0xFFFFC107)
+    /** The selected menu tab: orange reads better on carbon than the red accent. */
+    val Menu = Color(0xFFFF9800)
     /** Switched-off lamps and LEDs of the race display. */
     val Dim = Color(0xFF3A3A3A)
     /** Faint stripes of the carbon background. */
@@ -88,16 +90,19 @@ private fun loadRaceFont(): FontFamily = FontFamily(
     Font(Res.font.barlow_condensed_bold, FontWeight.Bold),
 )
 
-private fun Typography.withFamily(family: FontFamily) = Typography(
-    displayLarge = displayLarge.copy(fontFamily = family), displayMedium = displayMedium.copy(fontFamily = family),
-    displaySmall = displaySmall.copy(fontFamily = family), headlineLarge = headlineLarge.copy(fontFamily = family),
-    headlineMedium = headlineMedium.copy(fontFamily = family), headlineSmall = headlineSmall.copy(fontFamily = family),
-    titleLarge = titleLarge.copy(fontFamily = family), titleMedium = titleMedium.copy(fontFamily = family),
-    titleSmall = titleSmall.copy(fontFamily = family), bodyLarge = bodyLarge.copy(fontFamily = family),
-    bodyMedium = bodyMedium.copy(fontFamily = family), bodySmall = bodySmall.copy(fontFamily = family),
-    labelLarge = labelLarge.copy(fontFamily = family), labelMedium = labelMedium.copy(fontFamily = family),
-    labelSmall = labelSmall.copy(fontFamily = family),
-)
+/** Material text sizes times this: Barlow Condensed is narrow and reads small at the default sizes. */
+private const val TEXT_SCALE = 1.2f
+
+private fun Typography.withFamily(family: FontFamily): Typography {
+    fun TextStyle.race() = copy(fontFamily = family, fontSize = fontSize * TEXT_SCALE, lineHeight = lineHeight * TEXT_SCALE)
+    return Typography(
+        displayLarge = displayLarge.race(), displayMedium = displayMedium.race(), displaySmall = displaySmall.race(),
+        headlineLarge = headlineLarge.race(), headlineMedium = headlineMedium.race(), headlineSmall = headlineSmall.race(),
+        titleLarge = titleLarge.race(), titleMedium = titleMedium.race(), titleSmall = titleSmall.race(),
+        bodyLarge = bodyLarge.race(), bodyMedium = bodyMedium.race(), bodySmall = bodySmall.race(),
+        labelLarge = labelLarge.race(), labelMedium = labelMedium.race(), labelSmall = labelSmall.race(),
+    )
+}
 
 /** Angular controls: 2 dp corners, 4 dp for large surfaces. */
 private val RaceShapes = Shapes(

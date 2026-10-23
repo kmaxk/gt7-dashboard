@@ -4,13 +4,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
+import androidx.compose.material3.TabIndicatorScope
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.FilledTonalButton
@@ -100,9 +105,19 @@ fun App(
                     Column(Modifier.fillMaxSize()) {
                         if (tabRowVisible(compact, liveTab = tab == 0, expanded = tabsExpanded)) {
                             val tabs: @Composable () -> Unit = {
-                                TABS.forEachIndexed { i, title -> Tab(selected = tab == i, onClick = { tab = i; tabsExpanded = false }, text = { Text(title) }) }
+                                TABS.forEachIndexed { i, title ->
+                                    Tab(
+                                        selected = tab == i, onClick = { tab = i; tabsExpanded = false },
+                                        selectedContentColor = RaceColors.Menu, unselectedContentColor = RaceColors.TextPrimary,
+                                        text = { Text(title, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, maxLines = 1) },
+                                    )
+                                }
                             }
-                            if (compact) PrimaryScrollableTabRow(selectedTabIndex = tab, tabs = tabs) else PrimaryTabRow(selectedTabIndex = tab, tabs = tabs)
+                            val indicator: @Composable TabIndicatorScope.() -> Unit = {
+                                TabRowDefaults.PrimaryIndicator(Modifier.tabIndicatorOffset(tab, matchContentSize = true), width = Dp.Unspecified, color = RaceColors.Menu)
+                            }
+                            if (compact) PrimaryScrollableTabRow(selectedTabIndex = tab, indicator = indicator, tabs = tabs)
+                            else PrimaryTabRow(selectedTabIndex = tab, indicator = indicator, tabs = tabs)
                         }
                         Box(Modifier.fillMaxWidth().weight(1f)) {
                             when (tab) {
