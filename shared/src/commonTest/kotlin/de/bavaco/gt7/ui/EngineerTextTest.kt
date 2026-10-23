@@ -35,6 +35,52 @@ class EngineerTextTest {
     }
 
     @Test
+    fun everyNewCauseInGermanAndEnglish() {
+        val cases = listOf(
+            Cause.ReleaseEarly(12) to ("Bremse 12 m früher gelöst – länger mit in die Kurve nehmen" to "brake released 12 m earlier – carry it further into the corner"),
+            Cause.ReleaseLate(12) to ("Bremse 12 m später gelöst – früher lösen" to "brake released 12 m later – release earlier"),
+            Cause.ReleaseAbrupt(100, 400) to ("Bremse abrupt gelöst (0,1 s statt 0,4 s) – weicher auslaufen lassen" to
+                "brake released abruptly (0.1 s instead of 0.4 s) – ease off more gently"),
+            Cause.LockUp to ("Vorderräder blockieren beim Bremsen" to "front wheels lock under braking"),
+            Cause.Understeer to ("Untersteuern am Eingang – später einlenken oder mehr Tempo abbauen" to
+                "understeer on entry – turn in later or scrub off more speed"),
+            Cause.GripUnused(1.3f, 1.5f) to ("1,3 g statt 1,5 g am Scheitel – Grip nicht ausgenutzt" to "1.3 g instead of 1.5 g at the apex – grip left unused"),
+            Cause.ThrottleOnLock(70, 40) to ("Vollgas bei 70 % Lenkung (Vergleich 40 %) – erst Lenkung öffnen" to
+                "full throttle at 70 % steering (reference 40 %) – unwind the wheel first"),
+            Cause.ThrottleLate(20, 50) to ("Gas erst bei 20 % Lenkung (Vergleich 50 %) – früher ans Gas" to
+                "throttle only at 20 % steering (reference 50 %) – get on the throttle earlier"),
+            Cause.Oversteer(true) to ("Übersteuern am Ausgang (gegengelenkt) – Gas sanfter" to "oversteer on exit (countersteered) – smoother on the throttle"),
+            Cause.Oversteer(false) to ("Übersteuern am Ausgang – Gas sanfter" to "oversteer on exit – smoother on the throttle"),
+            Cause.Wheelspin to ("Räder drehen durch am Ausgang" to "wheelspin on exit"),
+        )
+        for ((cause, texts) in cases) {
+            assertEquals("Kurve 4: ${texts.first} – kostet 0,21 s", EngineerText.tip(report(4, 210, cause), DE))
+            assertEquals("Turn 4: ${texts.second} – costs 0.21 s", EngineerText.tip(report(4, 210, cause), EN))
+        }
+    }
+
+    @Test
+    fun spokenWritesOutNewUnits() {
+        assertEquals(
+            "Kurve 4: Bremse abrupt gelöst (0,1 Sekunden statt 0,4 Sekunden) – weicher auslaufen lassen",
+            EngineerText.spoken(report(4, 210, Cause.ReleaseAbrupt(100, 400)), DE),
+        )
+        assertEquals(
+            "Kurve 4: Vollgas bei 70 Prozent Lenkung (Vergleich 40 Prozent) – erst Lenkung öffnen",
+            EngineerText.spoken(report(4, 210, Cause.ThrottleOnLock(70, 40)), DE),
+        )
+        assertEquals("Kurve 4: 1,3 G statt 1,5 G am Scheitel – Grip nicht ausgenutzt", EngineerText.spoken(report(4, 210, Cause.GripUnused(1.3f, 1.5f)), DE))
+        assertEquals(
+            "Turn 4: full throttle at 70 percent steering (reference 40 percent) – unwind the wheel first",
+            EngineerText.spoken(report(4, 210, Cause.ThrottleOnLock(70, 40)), EN),
+        )
+        assertEquals(
+            "Turn 4: brake released abruptly (0.1 seconds instead of 0.4 seconds) – ease off more gently",
+            EngineerText.spoken(report(4, 210, Cause.ReleaseAbrupt(100, 400)), EN),
+        )
+    }
+
+    @Test
     fun furtherCausesAreListedAfterTheMainOne() {
         val r = report(2, 1234, Cause.BrakeEarly(15), Cause.GearDiffers(2, 3))
         assertEquals("Kurve 2: 15 m später bremsen – kostet 1,23 s (auch: Gang 2 statt 3)", EngineerText.tip(r, DE))

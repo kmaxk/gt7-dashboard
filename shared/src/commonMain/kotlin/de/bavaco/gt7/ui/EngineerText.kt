@@ -43,6 +43,9 @@ object EngineerText {
         liveTip(r, l)
             .replace(Regex("(\\d+) m\\b"), if (de(l)) "$1 Meter" else "$1 meters")
             .replace("km/h", if (de(l)) "Kilometer pro Stunde" else "kilometers per hour")
+            .replace(Regex("(\\d) %"), if (de(l)) "$1 Prozent" else "$1 percent")
+            .replace(Regex("(\\d) s\\b"), if (de(l)) "$1 Sekunden" else "$1 seconds")
+            .replace(Regex("(\\d) g\\b"), if (de(l)) "$1 G" else "$1 g")
 
     /** A race call as one spoken announcement, e.g. `1 Minute 57,0 – 0,3 Sekunden schneller. Noch 3 Runden.` */
     fun spoken(call: RaceCall, l: TipLanguage): String = when (call) {
@@ -98,6 +101,33 @@ object EngineerText {
         is Cause.LateThrottle ->
             if (de(l)) "früher ans Gas, ${c.meters} m später als die Vergleichsrunde" else "get on the throttle earlier, ${c.meters} m later than the reference"
         is Cause.GearDiffers -> if (de(l)) "Gang ${c.lap} statt ${c.reference}" else "gear ${c.lap} instead of ${c.reference}"
+        is Cause.ReleaseEarly ->
+            if (de(l)) "Bremse ${c.meters} m früher gelöst – länger mit in die Kurve nehmen" else "brake released ${c.meters} m earlier – carry it further into the corner"
+        is Cause.ReleaseLate -> if (de(l)) "Bremse ${c.meters} m später gelöst – früher lösen" else "brake released ${c.meters} m later – release earlier"
+        is Cause.ReleaseAbrupt -> {
+            val s = tenths(c.ms / 1000f, l)
+            val r = tenths(c.refMs / 1000f, l)
+            if (de(l)) "Bremse abrupt gelöst ($s s statt $r s) – weicher auslaufen lassen" else "brake released abruptly ($s s instead of $r s) – ease off more gently"
+        }
+        Cause.LockUp -> if (de(l)) "Vorderräder blockieren beim Bremsen" else "front wheels lock under braking"
+        Cause.Understeer ->
+            if (de(l)) "Untersteuern am Eingang – später einlenken oder mehr Tempo abbauen" else "understeer on entry – turn in later or scrub off more speed"
+        is Cause.GripUnused -> {
+            val g = tenths(c.g, l)
+            val r = tenths(c.refG, l)
+            if (de(l)) "$g g statt $r g am Scheitel – Grip nicht ausgenutzt" else "$g g instead of $r g at the apex – grip left unused"
+        }
+        is Cause.ThrottleOnLock ->
+            if (de(l)) "Vollgas bei ${c.pct} % Lenkung (Vergleich ${c.refPct} %) – erst Lenkung öffnen"
+            else "full throttle at ${c.pct} % steering (reference ${c.refPct} %) – unwind the wheel first"
+        is Cause.ThrottleLate ->
+            if (de(l)) "Gas erst bei ${c.pct} % Lenkung (Vergleich ${c.refPct} %) – früher ans Gas"
+            else "throttle only at ${c.pct} % steering (reference ${c.refPct} %) – get on the throttle earlier"
+        is Cause.Oversteer -> {
+            val how = if (!c.countersteer) "" else if (de(l)) " (gegengelenkt)" else " (countersteered)"
+            if (de(l)) "Übersteuern am Ausgang$how – Gas sanfter" else "oversteer on exit$how – smoother on the throttle"
+        }
+        Cause.Wheelspin -> if (de(l)) "Räder drehen durch am Ausgang" else "wheelspin on exit"
     }
 
     /** `verglichen mit: Max · 1:42.318 · gleiches Auto`. */

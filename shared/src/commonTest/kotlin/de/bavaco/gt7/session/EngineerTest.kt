@@ -170,4 +170,73 @@ class EngineerTest {
         assertTrue(Engineer.analyze(lap(base).take(1), lap(base)).reports.isEmpty())
         assertTrue(Engineer.analyze(lap(base), emptyList()).reports.isEmpty())
     }
+
+    private fun dyn(
+        releaseM: Float? = null, releaseMs: Int? = null, steerAtThrottlePct: Int? = null, steerPerYaw: Float? = null,
+        countersteerMs: Int? = null, yawPerSteerExit: Float? = null, apexLatG: Float? = null, minFrontSlip: Float? = null, maxRearSlip: Float? = null,
+    ) = CornerDynamics(releaseM, releaseMs, null, steerAtThrottlePct, steerPerYaw, countersteerMs, yawPerSteerExit, apexLatG, minFrontSlip, maxRearSlip)
+
+    private fun m(dyn: CornerDynamics, brakeM: Float? = 100f, apexKmh: Float = 80f, throttleM: Float? = 250f) =
+        Engineer.Measures(brakeM, apexKmh, throttleM, 3, dyn)
+
+    @Test
+    fun releaseEarlyAndAbrupt() {
+        val causes = Engineer.causes(m(dyn(releaseM = 135f, releaseMs = 100), brakeM = 80f), m(dyn(releaseM = 150f, releaseMs = 400)), 200)
+        assertEquals(listOf(Cause.BrakeEarly(20), Cause.ReleaseEarly(15), Cause.ReleaseAbrupt(100, 400)), causes)
+    }
+
+    @Test
+    fun releaseLateOnlyWhenTheApexIsSlower() {
+        val late = dyn(releaseM = 165f)
+        assertEquals(listOf<Cause>(), Engineer.causes(m(late), m(dyn(releaseM = 150f)), 200))
+        assertEquals(listOf(Cause.ReleaseLate(15), Cause.SlowApex(5)), Engineer.causes(m(late, apexKmh = 75f), m(dyn(releaseM = 150f)), 200))
+    }
+
+    @Test
+    fun noNewCausesWithoutLoss() {
+        val bad = dyn(releaseM = 100f, releaseMs = 50, minFrontSlip = -0.3f, maxRearSlip = 0.4f, countersteerMs = 500)
+        assertEquals(emptyList(), Engineer.causes(m(bad), m(dyn(releaseM = 150f, releaseMs = 400)), 0))
+    }
+
+    @Test
+    fun throttleLateReplacesLateThrottle() {
+        val causes = Engineer.causes(m(dyn(steerAtThrottlePct = 20), throttleM = 270f), m(dyn(steerAtThrottlePct = 50)), 200)
+        assertEquals(listOf(Cause.ThrottleLate(20, 50)), causes)
+    }
+
+    @Test
+    fun throttleOnLock() {
+        assertEquals(listOf(Cause.ThrottleOnLock(70, 40)), Engineer.causes(m(dyn(steerAtThrottlePct = 70)), m(dyn(steerAtThrottlePct = 40)), 200))
+    }
+
+    @Test
+    fun understeerAndOversteer() {
+        assertEquals(listOf(Cause.Understeer), Engineer.causes(m(dyn(steerPerYaw = 1.4f)), m(dyn(steerPerYaw = 1f)), 200))
+        assertEquals(listOf(Cause.Oversteer(true)), Engineer.causes(m(dyn(countersteerMs = 300)), m(dyn(countersteerMs = 0)), 200))
+        assertEquals(listOf(Cause.Oversteer(false)), Engineer.causes(m(dyn(yawPerSteerExit = 1.3f)), m(dyn(yawPerSteerExit = 1f)), 200))
+    }
+
+    @Test
+    fun referenceWithoutDynamics() {
+        val own = dyn(releaseM = 135f, minFrontSlip = -0.2f, countersteerMs = 300, steerPerYaw = 2f, apexLatG = 1f, steerAtThrottlePct = 90)
+        val ref = dyn(releaseM = 150f)
+        assertEquals(listOf(Cause.ReleaseEarly(15), Cause.LockUp, Cause.Oversteer(true)), Engineer.causes(m(own), m(ref), 200))
+    }
+
+    @Test
+    fun causeOrderFollowsCornerPhase() {
+        val own = dyn(releaseMs = 100, apexLatG = 1.3f, maxRearSlip = 0.3f)
+        val ref = dyn(releaseMs = 400, apexLatG = 1.5f)
+        assertEquals(
+            listOf(Cause.BrakeEarly(20), Cause.ReleaseAbrupt(100, 400), Cause.GripUnused(1.3f, 1.5f), Cause.Wheelspin),
+            Engineer.causes(m(own, brakeM = 80f), m(ref), 200),
+        )
+    }
+
+    @Test
+    fun reportsCarryDynamicsOfBothLaps() {
+        val d = Engineer.analyze(lap(with(1, C(800f, brakeLen = 140f))), lap(base))
+        val r = d.reports[1]
+        assertTrue(r.dynamics.releaseM != null && r.refDynamics.releaseM != null)
+    }
 }
