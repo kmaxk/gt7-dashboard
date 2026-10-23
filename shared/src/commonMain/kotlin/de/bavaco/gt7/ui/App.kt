@@ -133,6 +133,7 @@ fun App(
                                         val key = speechVoiceSetting(tipLanguage)
                                         scope.launch(Dispatchers.Default) { repo.setSetting(key, v.orEmpty()) }
                                     },
+                                    onSpeechSample = { speaker?.speak(EngineerText.speechSample(tipLanguage), tipLanguage, speechVoices[tipLanguage]) },
                                     onSpeechChange = {
                                         speechEnabled = it
                                         scope.launch(Dispatchers.Default) { repo.setSetting(SPEECH_SETTING, if (it) "on" else "off") }

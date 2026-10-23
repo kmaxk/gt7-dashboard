@@ -47,6 +47,9 @@ object EngineerText {
             .replace(Regex("(\\d) s\\b"), if (de(l)) "$1 Sekunden" else "$1 seconds")
             .replace(Regex("(\\d) g\\b"), if (de(l)) "$1 G" else "$1 g")
 
+    /** What the settings play to try a voice: a typical end-of-lap call. */
+    fun speechSample(l: TipLanguage): String = spoken(RaceCall.LapDone(117_040, true, -300, 3, null), l)
+
     /** A race call as one spoken announcement, e.g. `1 Minute 57,0 – 0,3 Sekunden schneller. Noch 3 Runden.` */
     fun spoken(call: RaceCall, l: TipLanguage): String = when (call) {
         is RaceCall.LapDone -> buildList {

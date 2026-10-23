@@ -61,6 +61,8 @@ fun SettingsScreen(
     onCoachChange: (Boolean) -> Unit,
     onSpeechChange: (Boolean) -> Unit,
     onVoiceChange: (String?) -> Unit,
+    /** Plays [EngineerText.speechSample] with the chosen voice. */
+    onSpeechSample: () -> Unit,
     onTipLanguageChange: (TipLanguage) -> Unit,
     onUnitChange: (SpeedUnit) -> Unit,
 ) {
@@ -109,14 +111,16 @@ fun SettingsScreen(
                 FilterChip(selected = speech.enabled, onClick = { onSpeechChange(true) }, label = { Text("An") })
                 FilterChip(selected = !speech.enabled, onClick = { onSpeechChange(false) }, label = { Text("Aus") })
             }
-            if (speech.voices.isNotEmpty()) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (speech.voices.isNotEmpty()) {
                     Text("Stimme")
                     FilterMenu(
                         speech.voice?.takeIf { it in speech.voices } ?: "Standard",
                         listOf<Pair<String, () -> Unit>>("Standard" to { onVoiceChange(null) }) + speech.voices.map { v -> v to { onVoiceChange(v) } },
                     )
                 }
+                // works with voice output off, too: to choose a voice before switching it on
+                OutlinedButton(shape = RaceButtonShape, onClick = onSpeechSample) { Text("Probe anhören") }
             }
         }
 

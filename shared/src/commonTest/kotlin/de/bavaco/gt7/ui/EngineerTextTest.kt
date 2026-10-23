@@ -131,6 +131,12 @@ class EngineerTextTest {
     }
 
     @Test
+    fun speechSampleIsALapCall() {
+        assertEquals("1 Minute 57,0 – 0,3 Sekunden schneller. Noch 3 Runden.", EngineerText.speechSample(DE))
+        assertEquals("1 minute 57.0 – 0.3 seconds faster. 3 laps to go.", EngineerText.speechSample(EN))
+    }
+
+    @Test
     fun spokenLapCalls() {
         val race = RaceCall.LapDone(117_040, true, -300, 3, 0.43f)
         assertEquals("1 Minute 57,0 – 0,3 Sekunden schneller. Noch 3 Runden. Sprit fehlt für 0,4 Runden – Sprit sparen.", EngineerText.spoken(race, DE))
