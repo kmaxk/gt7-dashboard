@@ -10,9 +10,10 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.time.TimeSource
 import kotlinx.io.Source
 import kotlinx.io.Buffer
@@ -20,19 +21,13 @@ import kotlinx.io.Buffer
 /** "A" asks GT7 for 296-byte packets, "B" for 316 bytes with steering and accelerations. */
 internal fun heartbeatPacket(type: Char = 'B'): Source = Buffer().apply { writeByte(type.code.toByte()) }
 
-private const val SILENCE_SWITCH_MS = 5_000L
-
-/** GT7 versions without packet type B stay silent on "B": after [SILENCE_SWITCH_MS] of silence try the other type. */
-internal fun nextHeartbeat(current: Char, silentMs: Long, switchMs: Long = SILENCE_SWITCH_MS): Char =
-    if (silentMs < switchMs) current else if (current == 'B') 'A' else 'B'
-
 class UdpTelemetrySource(
     private val host: String,
     private val sendPort: Int = 33739,
     private val receivePort: Int = 33740,
     private val heartbeatIntervalMs: Long = 10_000,
     private val nowMs: () -> Long,
-    private val silenceSwitchMs: Long = SILENCE_SWITCH_MS,
+    private val timings: HeartbeatTimings = HeartbeatTimings(),
 ) : TelemetrySource {
     override val packets: Flow<RawPacket> = channelFlow {
         val selector = SelectorManager(Dispatchers.IO)
@@ -40,14 +35,16 @@ class UdpTelemetrySource(
             val socket = aSocket(selector).udp().bind(InetSocketAddress("0.0.0.0", receivePort))
             try {
                 val target = InetSocketAddress(host, sendPort)
-                // last packet, or last switch of the heartbeat type; shared with the receive loop below
-                val quietSince = MutableStateFlow(TimeSource.Monotonic.markNow())
+                // shared by the heartbeat loop and the receive loop below
+                val clock = TimeSource.Monotonic.markNow()
+                fun elapsedMs() = clock.elapsedNow().inWholeMilliseconds
+                val chooser = HeartbeatChooser(elapsedMs(), timings)
+                val lock = Mutex()
                 launch {
-                    var type = 'B'
-                    val tick = minOf(1_000L, silenceSwitchMs, heartbeatIntervalMs)
+                    val tick = minOf(1_000L, timings.switchMs, heartbeatIntervalMs)
                     while (true) {
                         try {
-                            socket.send(Datagram(heartbeatPacket(type), target))
+                            socket.send(Datagram(heartbeatPacket(lock.withLock { chooser.type }), target))
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {
@@ -58,11 +55,9 @@ class UdpTelemetrySource(
                         while (waited < heartbeatIntervalMs) {
                             delay(tick)
                             waited += tick
-                            val next = nextHeartbeat(type, quietSince.value.elapsedNow().inWholeMilliseconds, silenceSwitchMs)
-                            if (next != type) {
-                                type = next
-                                quietSince.value = TimeSource.Monotonic.markNow()
-                                println("[GT7] no packets, heartbeat now $type")
+                            val next = lock.withLock { chooser.tick(elapsedMs()) }
+                            if (next != null) {
+                                println("[GT7] heartbeat now $next")
                                 break
                             }
                         }
@@ -72,9 +67,11 @@ class UdpTelemetrySource(
                 var first = true
                 while (true) {
                     val datagram = socket.receive()
-                    quietSince.value = TimeSource.Monotonic.markNow()
                     if (first) println("[GT7] first packet from ${datagram.address}").also { first = false }
-                    send(RawPacket(nowMs(), datagram.packet.readByteArray(), datagram.address.senderHost()))
+                    val bytes = datagram.packet.readByteArray()
+                    // only a packet GT7 really sent counts as an answer to the heartbeat
+                    if (PacketDecoder.decode(bytes) != null) lock.withLock { chooser.onPacket(bytes.size, elapsedMs()) }
+                    send(RawPacket(nowMs(), bytes, datagram.address.senderHost()))
                 }
             } finally {
                 socket.close()

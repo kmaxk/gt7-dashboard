@@ -20,7 +20,7 @@ class UdpTelemetrySourceTest {
     private fun freePort(): Int = DatagramSocket(0).use { it.localPort }
 
     /** Fake PS5: counts heartbeats ("A" or "B"), remembers their types and optionally replies with a valid packet of that type. */
-    private class FakePs5(val reply: Boolean) : AutoCloseable {
+    private class FakePs5(val reply: Boolean, val garbage: Boolean = false) : AutoCloseable {
         val socket = DatagramSocket(0, InetAddress.getByName("127.0.0.1"))
         val port get() = socket.localPort
         val heartbeats = AtomicInteger()
@@ -36,7 +36,9 @@ class UdpTelemetrySourceTest {
                         heartbeats.incrementAndGet()
                         types += type
                         if (reply) {
-                            val data = if (type == 'B') {
+                            val data = if (garbage) {
+                                ByteArray(PacketDecoder.PACKET_SIZE_B)
+                            } else if (type == 'B') {
                                 encryptForTest(plainPacket(PacketDecoder.PACKET_SIZE_B), 1, 0xDEADBEEF.toInt())
                             } else {
                                 encryptForTest(plainPacket {}, 1)
@@ -75,17 +77,24 @@ class UdpTelemetrySourceTest {
         }
     }
 
+    private val fast = HeartbeatTimings(switchMs = 100, tryAMs = 200, probeBMs = 2_000)
+
     @Test
-    fun nextHeartbeatTogglesOnlyAfterSilence() {
-        assertEquals('B', nextHeartbeat('B', 4_999))
-        assertEquals('A', nextHeartbeat('B', 5_000))
-        assertEquals('B', nextHeartbeat('A', 5_000))
+    fun triesAWhenSilent() = runBlocking {
+        FakePs5(reply = false).use { ps5 ->
+            val source = UdpTelemetrySource("127.0.0.1", ps5.port, freePort(), nowMs = { 0L }, timings = fast)
+            val job = launch(Dispatchers.Default) { source.packets.collect { } }
+            delay(1000)
+            job.cancel()
+            assertTrue('A' in ps5.types.toList(), "heartbeats: ${ps5.types}")
+        }
     }
 
     @Test
-    fun fallsBackToAWhenSilent() = runBlocking {
-        FakePs5(reply = false).use { ps5 ->
-            val source = UdpTelemetrySource("127.0.0.1", ps5.port, freePort(), nowMs = { 0L }, silenceSwitchMs = 200)
+    fun invalidRepliesAreNoAnswer() = runBlocking {
+        FakePs5(reply = true, garbage = true).use { ps5 ->
+            // a heartbeat every 50 ms keeps the junk coming
+            val source = UdpTelemetrySource("127.0.0.1", ps5.port, freePort(), 50, nowMs = { 0L }, timings = fast)
             val job = launch(Dispatchers.Default) { source.packets.collect { } }
             delay(1000)
             job.cancel()
