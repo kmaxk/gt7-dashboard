@@ -19,21 +19,28 @@ import kotlinx.coroutines.withTimeout
 class UdpTelemetrySourceTest {
     private fun freePort(): Int = DatagramSocket(0).use { it.localPort }
 
-    /** Fake PS5: counts heartbeats ("A") and optionally replies with a valid packet. */
+    /** Fake PS5: counts heartbeats ("A" or "B"), remembers their types and optionally replies with a valid packet of that type. */
     private class FakePs5(val reply: Boolean) : AutoCloseable {
         val socket = DatagramSocket(0, InetAddress.getByName("127.0.0.1"))
         val port get() = socket.localPort
         val heartbeats = AtomicInteger()
+        val types: MutableList<Char> = java.util.Collections.synchronizedList(mutableListOf())
         private val worker = thread(isDaemon = true) {
             val buf = ByteArray(16)
             try {
                 while (true) {
                     val p = DatagramPacket(buf, buf.size)
                     socket.receive(p)
-                    if (p.length == 1 && buf[0] == 'A'.code.toByte()) {
+                    val type = buf[0].toInt().toChar()
+                    if (p.length == 1 && (type == 'A' || type == 'B')) {
                         heartbeats.incrementAndGet()
+                        types += type
                         if (reply) {
-                            val data = encryptForTest(plainPacket {}, 1)
+                            val data = if (type == 'B') {
+                                encryptForTest(plainPacket(PacketDecoder.PACKET_SIZE_B), 1, 0xDEADBEEF.toInt())
+                            } else {
+                                encryptForTest(plainPacket {}, 1)
+                            }
                             socket.send(DatagramPacket(data, data.size, p.address, p.port))
                         }
                     }
@@ -50,7 +57,8 @@ class UdpTelemetrySourceTest {
         FakePs5(reply = true).use { ps5 ->
             val source = UdpTelemetrySource("127.0.0.1", ps5.port, freePort(), nowMs = { 42L })
             val packet = withTimeout(2000) { source.packets.first() }
-            assertEquals(296, packet.bytes.size)
+            assertEquals('B', ps5.types.first())
+            assertEquals(316, packet.bytes.size)
             assertEquals(42L, packet.atMs)
             assertEquals("127.0.0.1", packet.senderHost)
         }
@@ -64,6 +72,24 @@ class UdpTelemetrySourceTest {
             delay(700)
             job.cancel()
             assertTrue(ps5.heartbeats.get() >= 3, "heartbeats: ${ps5.heartbeats.get()}")
+        }
+    }
+
+    @Test
+    fun nextHeartbeatTogglesOnlyAfterSilence() {
+        assertEquals('B', nextHeartbeat('B', 4_999))
+        assertEquals('A', nextHeartbeat('B', 5_000))
+        assertEquals('B', nextHeartbeat('A', 5_000))
+    }
+
+    @Test
+    fun fallsBackToAWhenSilent() = runBlocking {
+        FakePs5(reply = false).use { ps5 ->
+            val source = UdpTelemetrySource("127.0.0.1", ps5.port, freePort(), nowMs = { 0L }, silenceSwitchMs = 200)
+            val job = launch(Dispatchers.Default) { source.packets.collect { } }
+            delay(1000)
+            job.cancel()
+            assertTrue('A' in ps5.types.toList(), "heartbeats: ${ps5.types}")
         }
     }
 

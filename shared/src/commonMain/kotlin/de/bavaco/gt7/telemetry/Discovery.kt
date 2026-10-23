@@ -23,7 +23,7 @@ suspend fun discoverPs5(
         val socket = aSocket(selector).udp().bind(InetSocketAddress("0.0.0.0", receivePort)) { broadcast = true }
         try {
             try {
-                socket.send(Datagram(heartbeatPacket(), InetSocketAddress(broadcastHost, sendPort)))
+                socket.send(Datagram(heartbeatPacket('B'), InetSocketAddress(broadcastHost, sendPort)))
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
