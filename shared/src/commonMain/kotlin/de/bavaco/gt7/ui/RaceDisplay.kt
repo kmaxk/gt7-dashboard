@@ -21,12 +21,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import de.bavaco.gt7.session.LiveState
 import de.bavaco.gt7.session.Opponent
@@ -39,8 +41,7 @@ import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
-private val Black = Color.Black
-private val Frame = RaceColors.TextPrimary
+private val PanelShape = RoundedCornerShape(4.dp)
 private val Dim = RaceColors.Dim
 private val LedYellow = RaceColors.LapA
 private val LampGreen = RaceColors.Gain.copy(alpha = 0.35f)
@@ -48,7 +49,7 @@ private val ColdBlue = RaceColors.LapB
 private val BoxCyan = RaceColors.LapB
 private val BoxYellow = RaceColors.LapA
 
-/** Race display after the "Lovely Dashboard": shift lights, gear centre stage, tyres left, lap times right. */
+/** Race display: shift lights, gear centre stage, tyres left, lap times right; carbon panels like the rest of the app. */
 @Composable
 fun RaceDisplay(
     state: LiveState,
@@ -62,7 +63,7 @@ fun RaceDisplay(
 ) {
     val f = state.frame
     val labels = opponentLabels(selection.opponent, selection.active?.name ?: "")
-    BoxWithConstraints(Modifier.fillMaxSize().background(Black)) {
+    BoxWithConstraints(Modifier.fillMaxSize().carbon()) {
         val s = dashboardScale(maxWidth.value, maxHeight.value, LocalCompact.current)
         val gap = 8.dp * s
         Column(Modifier.fillMaxSize().padding(12.dp * s), verticalArrangement = Arrangement.spacedBy(gap)) {
@@ -110,7 +111,7 @@ private fun ShiftLeds(f: TelemetryFrame?, outsideFirst: Boolean, scale: Float, m
                 LedColor.Yellow -> LedYellow
                 LedColor.Red -> BadRed
             }
-            Box(Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(50)).background(if (limiter) color.copy(alpha = blink) else color))
+            Box(Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(1.dp * scale)).background(if (limiter) color.copy(alpha = blink) else color))
         }
     }
 }
@@ -118,26 +119,34 @@ private fun ShiftLeds(f: TelemetryFrame?, outsideFirst: Boolean, scale: Float, m
 @Composable
 private fun DeltaBox(deltaMs: Int?, label: String, scale: Float, modifier: Modifier) {
     val color = if (deltaMs == null) Dim else if (deltaMs < 0) GoodGreen else BadRed
-    Box(modifier.clip(RoundedCornerShape(topStart = 10.dp * scale, topEnd = 10.dp * scale)).background(color), contentAlignment = Alignment.Center) {
+    Box(modifier.clip(RoundedCornerShape(2.dp * scale)).background(color), contentAlignment = Alignment.Center) {
         Text(if (deltaMs == null) label else formatDelta(deltaMs), style = digits(20.sp * scale), color = Color.White, maxLines = 1)
     }
 }
 
-/** Rounded, light-framed panel with an optional title set into the top edge. */
+/** Filled carbon panel with an [edge] stripe on the left and an optional title at the top left. */
 @Composable
-private fun Section(title: String?, scale: Float, modifier: Modifier, titleSize: Int = 12, content: @Composable ColumnScope.() -> Unit) {
+private fun Section(
+    title: String?, scale: Float, modifier: Modifier, titleSize: Int = 12, edge: Color = RaceColors.Accent,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     Column(
-        modifier.clip(RoundedCornerShape(14.dp * scale)).border(1.5.dp * scale, Frame, RoundedCornerShape(14.dp * scale)).padding(10.dp * scale),
+        modifier.clip(PanelShape).background(RaceColors.Surface)
+            .drawBehind { drawRect(edge, size = Size(3.dp.toPx() * scale, size.height)) }
+            .padding(start = 13.dp * scale, top = 10.dp * scale, end = 10.dp * scale, bottom = 10.dp * scale),
         verticalArrangement = Arrangement.spacedBy(4.dp * scale),
     ) {
-        if (title != null) {
-            Text(
-                title, Modifier.fillMaxWidth(), fontSize = titleSize.sp * scale, fontWeight = if (titleSize > 12) FontWeight.Bold else null,
-                color = Color.White, textAlign = TextAlign.Center, maxLines = 1,
-            )
-        }
+        if (title != null) SectionTitle(title, scale, titleSize)
         content()
     }
+}
+
+@Composable
+private fun SectionTitle(title: String, scale: Float, size: Int = 12) {
+    Text(
+        title, fontSize = size.sp * scale, fontWeight = if (size > 12) FontWeight.Bold else FontWeight.SemiBold,
+        letterSpacing = 0.14.em, color = if (size > 12) Color.White else RaceColors.TextMuted, maxLines = 1,
+    )
 }
 
 @Composable
@@ -157,8 +166,8 @@ private fun Lamps(f: TelemetryFrame?, scale: Float, modifier: Modifier) {
 @Composable
 private fun RowScope.Lamp(text: String, on: Boolean, color: Color, scale: Float) {
     Box(
-        Modifier.weight(1f).height(38.dp * scale).clip(RoundedCornerShape(6.dp * scale)).background(if (on) LampGreen else Panel)
-            .border(1.dp * scale, if (on) color else Color.Transparent, RoundedCornerShape(6.dp * scale)),
+        Modifier.weight(1f).height(38.dp * scale).clip(RoundedCornerShape(2.dp * scale)).background(if (on) LampGreen else RaceColors.SurfaceRaised)
+            .border(1.dp * scale, if (on) color else Color.Transparent, RoundedCornerShape(2.dp * scale)),
         contentAlignment = Alignment.Center,
     ) {
         Text(text, fontSize = 11.sp * scale, color = if (on) color else Color.Gray, maxLines = 1, softWrap = false)
@@ -182,7 +191,7 @@ private fun Tires(state: LiveState, carName: String?, scale: Float, modifier: Mo
             }
             if (carName != null) {
                 Text(
-                    carName, Modifier.align(Alignment.Center).clip(RoundedCornerShape(50)).background(Dim).padding(horizontal = 10.dp * scale, vertical = 3.dp * scale),
+                    carName, Modifier.align(Alignment.Center).clip(RoundedCornerShape(2.dp * scale)).background(RaceColors.SurfaceRaised).padding(horizontal = 10.dp * scale, vertical = 3.dp * scale),
                     fontSize = 12.sp * scale, color = Color.White, maxLines = 1,
                 )
             }
@@ -228,8 +237,11 @@ private fun CenterStack(state: LiveState, unit: SpeedUnit, scale: Float, modifie
         }
         HBar(f?.throttle ?: 0f, GoodGreen, height = 8.dp * scale)
         HBar(f?.brake ?: 0f, BadRed, height = 8.dp * scale)
-        Box(Modifier.fillMaxWidth().height(44.dp * scale).clip(RoundedCornerShape(4.dp * scale)).background(Color.White), contentAlignment = Alignment.Center) {
-            Text(f?.let { formatSpeed(it.speedMps, unit) } ?: "–", style = digits(30.sp * scale), color = Black)
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp * scale)).background(RaceColors.SurfaceRaised)) {
+            Box(Modifier.fillMaxWidth().height(41.dp * scale), contentAlignment = Alignment.Center) {
+                Text(f?.let { formatSpeed(it.speedMps, unit) } ?: "–", style = digits(32.sp * scale), color = Color.White)
+            }
+            Box(Modifier.fillMaxWidth().height(3.dp * scale).background(RaceColors.Accent))
         }
         Text(if (unit == SpeedUnit.KMH) "km/h" else "mph", Modifier.fillMaxWidth(), fontSize = 12.sp * scale, color = Color.Gray, textAlign = TextAlign.Center)
     }
@@ -283,14 +295,10 @@ private fun TimeLine(value: String, label: String, color: Color, size: TextUnit,
 
 @Composable
 private fun RowScope.ValueBox(label: String, value: String?, color: Color, scale: Float) {
-    Column(
-        Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(bottomStart = 16.dp * scale, bottomEnd = 16.dp * scale, topStart = 4.dp * scale, topEnd = 4.dp * scale))
-            .border(1.5.dp * scale, color, RoundedCornerShape(bottomStart = 16.dp * scale, bottomEnd = 16.dp * scale, topStart = 4.dp * scale, topEnd = 4.dp * scale))
-            .padding(6.dp * scale),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(label, fontSize = 15.sp * scale, fontWeight = FontWeight.Bold, color = color, maxLines = 1)
-        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+    Column(Modifier.weight(1f).fillMaxHeight().clip(PanelShape).background(RaceColors.Surface)) {
+        Box(Modifier.fillMaxWidth().height(4.dp * scale).background(color))
+        Text(label, Modifier.padding(start = 8.dp * scale, top = 4.dp * scale), fontSize = 15.sp * scale, fontWeight = FontWeight.Bold, color = color, maxLines = 1)
+        Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
             Text(value ?: "– –", style = digits(34.sp * scale), color = if (value == null) color.copy(alpha = 0.5f) else Color.White, maxLines = 1)
         }
     }
@@ -300,11 +308,10 @@ private fun RowScope.ValueBox(label: String, value: String?, color: Color, scale
 private fun FuelPanel(state: LiveState, scale: Float, modifier: Modifier) {
     val f = state.frame
     val fraction = f?.takeIf { it.fuelCapacity > 0f }?.let { it.fuelLevel / it.fuelCapacity } ?: 0f
-    Section("TANK", scale, modifier) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp * scale)) {
-            Text("E", fontSize = 10.sp * scale, color = Color.Gray)
-            FuelScale(fraction, scale, Modifier.weight(1f))
-            Text("F", fontSize = 10.sp * scale, color = Color.Gray)
+    Section(null, scale, modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp * scale)) {
+            SectionTitle("TANK", scale)
+            FuelBar(fraction, scale, Modifier.weight(1f))
         }
         Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
             Stat(state.fuelLapsRemaining?.let { formatDecimal(it, 1) } ?: "–", "RESTRUNDEN", scale)
@@ -316,13 +323,17 @@ private fun FuelPanel(state: LiveState, scale: Float, modifier: Modifier) {
     }
 }
 
-/** Segmented E..F bar like a fuel gauge. */
+/** Tank level as one bar, with quarter marks. */
 @Composable
-private fun FuelScale(fraction: Float, scale: Float, modifier: Modifier, segments: Int = 10, height: Dp = 8.dp) {
-    Row(modifier.height(height * scale), horizontalArrangement = Arrangement.spacedBy(2.dp * scale)) {
-        repeat(segments) { i ->
-            val on = fraction * segments > i
-            Box(Modifier.weight(1f).fillMaxHeight().background(if (on) LedYellow else Dim))
+private fun FuelBar(fraction: Float, scale: Float, modifier: Modifier) {
+    Box(modifier.height(8.dp * scale).clip(RoundedCornerShape(1.dp * scale)).background(Dim)) {
+        Box(Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).fillMaxHeight().background(LedYellow))
+        Row(Modifier.fillMaxSize()) {
+            repeat(4) { i ->
+                Box(Modifier.weight(1f).fillMaxHeight()) {
+                    if (i > 0) Box(Modifier.width(2.dp * scale).fillMaxHeight().background(RaceColors.Surface))
+                }
+            }
         }
     }
 }
