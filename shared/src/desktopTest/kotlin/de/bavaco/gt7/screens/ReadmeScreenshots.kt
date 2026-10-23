@@ -147,9 +147,8 @@ class ReadmeScreenshots {
                     for (p in tail) { delay(16); clock = p.atMs; emit(p) }
                 }
             })
-            // the track question comes after the first full lap
-            repeat(100) { if (controller.trackQuestion.value == null) Thread.sleep(50) }
-            controller.confirmTrack()
+            // the track is assigned after the first full lap
+            repeat(100) { if (controller.trackNotice.value == null) Thread.sleep(50) }
             repeat(100) { if (controller.live.value.distanceM < 1200f) Thread.sleep(50) }
             Thread.sleep(500)
         }

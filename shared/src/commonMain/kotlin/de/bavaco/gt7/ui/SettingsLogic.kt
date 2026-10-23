@@ -1,5 +1,6 @@
 package de.bavaco.gt7.ui
 
+import de.bavaco.gt7.session.TrackNotice
 import de.bavaco.gt7.storage.EXPORT_EXTENSION
 import de.bavaco.gt7.storage.ImportResult
 import de.bavaco.gt7.telemetry.PacketStats
@@ -30,12 +31,9 @@ fun importResultText(r: ImportResult): String {
         count(r.carNames, "Autoname", "Autonamen")
 }
 
-/** `Gleiche Strecke wie am dd.MM. – Name?`; the date is omitted if the track was never driven (0). */
-fun suggestText(trackName: String, lastDrivenAtMs: Long, zone: TimeZone = TimeZone.currentSystemDefault()): String {
-    if (lastDrivenAtMs <= 0L) return "Gleiche Strecke wie $trackName?"
-    val t = Instant.fromEpochMilliseconds(lastDrivenAtMs).toLocalDateTime(zone)
-    return "Gleiche Strecke wie am ${two(t.dayOfMonth)}.${two(t.monthNumber)}. – $trackName?"
-}
+/** `Strecke erkannt: Name`, or for a new track `Neue Strecke angelegt: Name – umbenennen unter Strecken`. */
+fun trackNoticeText(notice: TrackNotice): String =
+    if (notice.isNew) "Neue Strecke angelegt: ${notice.name} – umbenennen unter Strecken" else "Strecke erkannt: ${notice.name}"
 
 /** `<n> Pakete/s · <m> verworfen`, plus `· <k> Schreibfehler` when recording errors occurred. */
 fun diagnosticsText(stats: PacketStats): String {

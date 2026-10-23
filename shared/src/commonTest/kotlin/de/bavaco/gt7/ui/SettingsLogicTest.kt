@@ -1,5 +1,6 @@
 package de.bavaco.gt7.ui
 
+import de.bavaco.gt7.session.TrackNotice
 import de.bavaco.gt7.storage.ImportResult
 import de.bavaco.gt7.telemetry.PacketStats
 import kotlinx.datetime.TimeZone
@@ -15,9 +16,9 @@ class SettingsLogicTest {
         assertEquals("2026-03-05_08-08-09.gt7rec", recordingFileName(t, TimeZone.of("Europe/Berlin")))
     }
 
-    @Test fun suggest() {
-        assertEquals("Gleiche Strecke wie am 05.03. – Nürburgring?", suggestText("Nürburgring", t, TimeZone.UTC))
-        assertEquals("Gleiche Strecke wie Monza?", suggestText("Monza", 0L, TimeZone.UTC))
+    @Test fun trackNotice() {
+        assertEquals("Strecke erkannt: Monza", trackNoticeText(TrackNotice(1, "Monza", isNew = false)))
+        assertEquals("Neue Strecke angelegt: Neue Strecke 2 – umbenennen unter Strecken", trackNoticeText(TrackNotice(2, "Neue Strecke 2", isNew = true)))
     }
 
     @Test fun diagnostics() {

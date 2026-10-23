@@ -30,10 +30,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.io.Sink
 import kotlin.concurrent.Volatile
 
-sealed interface TrackQuestion {
-    data class Suggest(val track: Track, val lastDrivenAtMs: Long) : TrackQuestion
-    data object AskName : TrackQuestion
-}
+/** The track assigned to the running session after its first lap, without asking; [isNew] if it was just created. */
+data class TrackNotice(val trackId: Long, val name: String, val isNew: Boolean)
 
 enum class ConnectionStatus { Idle, Searching, Waiting, Receiving }
 
@@ -46,7 +44,7 @@ private const val OPPONENT_SELF = "self"
 
 /**
  * Wires a telemetry source through [TelemetryPipeline] into one [SessionEngine] and persists its
- * events in [repo]. Handles track questions and the live reference lap.
+ * events in [repo]. Assigns the track and handles the live reference lap.
  *
  * Designed for a single-threaded [scope], e.g. `CoroutineScope(SupervisorJob() + Dispatchers.Default.limitedParallelism(1))`;
  * engine and session state are additionally touched only under [lock]. Public actions are executed
@@ -71,8 +69,9 @@ class SessionController(
     private val _ps5Host = MutableStateFlow<String?>(null)
     val ps5Host: StateFlow<String?> = _ps5Host.asStateFlow()
 
-    private val _trackQuestion = MutableStateFlow<TrackQuestion?>(null)
-    val trackQuestion: StateFlow<TrackQuestion?> = _trackQuestion.asStateFlow()
+    private val _trackNotice = MutableStateFlow<TrackNotice?>(null)
+    /** Shown briefly while driving, so a wrong match can be undone; never blocks. */
+    val trackNotice: StateFlow<TrackNotice?> = _trackNotice.asStateFlow()
 
     private val _recording = MutableStateFlow<String?>(null)
     /** Name of the file currently being recorded, null when not recording. */
@@ -261,29 +260,12 @@ class SessionController(
         old?.closeQuietly()
     }
 
-    fun confirmTrack() = withState {
-        val q = _trackQuestion.value as? TrackQuestion.Suggest ?: return@withState
-        val session = sessionId ?: return@withState
-        db("assign track") { repo.assignTrack(session, q.track.id) }
-        trackId = q.track.id
-        _trackQuestion.value = null
-        loadTrackLine()
-        loadReference()
-    }
+    fun dismissTrackNotice() = withState { _trackNotice.value = null }
 
-    fun rejectSuggestion() = withState {
-        if (_trackQuestion.value is TrackQuestion.Suggest) _trackQuestion.value = TrackQuestion.AskName
-    }
-
-    fun nameTrack(name: String) = withState {
-        val session = sessionId ?: return@withState
-        val shape = outline ?: return@withState
-        if (trackId != null) return@withState
-        val id = db("create track") { repo.createTrack(name, shape) } ?: return@withState
-        db("assign track") { repo.assignTrack(session, id) }
-        trackId = id
-        _trackQuestion.value = null
-        loadTrackLine()
+    /** The recognised track is wrong: the session gets a new track instead, named later in the tracks tab. */
+    fun rejectTrack() = withState {
+        if (_trackNotice.value?.takeIf { !it.isNew && it.trackId == trackId } == null) return@withState
+        createTrack(db("load tracks") { repo.tracks() } ?: return@withState)
     }
 
     private fun withState(block: () -> Unit) {
@@ -301,7 +283,7 @@ class SessionController(
                 raceCalls.reset()
                 _liveLaps.value = emptyList()
                 _theoreticalBestMs.value = null
-                _trackQuestion.value = null
+                _trackNotice.value = null
                 _driversWithSessions.value = db("load drivers with sessions") { repo.driversWithSessions() } ?: _driversWithSessions.value
                 val carried = carryTrack
                 carryTrack = null
@@ -344,20 +326,37 @@ class SessionController(
             setReference(lap.samples, lap.timeMs)
             _reference.value = ReferenceInfo(driver, true, lap.timeMs, carCode ?: 0, nowMs(), true, lap.samples)
         }
-        if (session != null && trackId == null && outline == null && lap.samples.size >= 2) askForTrack(lap.samples)
+        if (session != null && trackId == null && outline == null && lap.samples.size >= 2) assignTrack(lap.samples)
     }
 
-    private fun askForTrack(samples: List<LapSample>) {
+    /** Assigns the matching track, or a new one; no dialog, the driver cannot answer while driving. */
+    private fun assignTrack(samples: List<LapSample>) {
         val shape = TrackMatcher.outlineOf(samples)
         outline = shape
         val tracks = db("load tracks") { repo.tracks() } ?: emptyList()
         // the outline decides; the position match helps when the outline alone is not close enough
         val match = TrackMatcher.findMatch(shape, tracks) ?: tracks.find { it.id == locatedTrack }
-        _trackQuestion.value = if (match == null) {
-            TrackQuestion.AskName
-        } else {
-            TrackQuestion.Suggest(match, db("load last drive") { repo.lastSessionStartForTrack(match.id) } ?: 0L)
-        }
+        if (match == null) return createTrack(tracks)
+        val session = sessionId ?: return
+        db("assign track") { repo.assignTrack(session, match.id) }
+        trackId = match.id
+        _trackNotice.value = TrackNotice(match.id, match.name, isNew = false)
+        loadTrackLine()
+        loadReference()
+    }
+
+    /** Creates a track from the session's outline with a placeholder name not among [tracks] and assigns it. */
+    private fun createTrack(tracks: List<Track>) {
+        val session = sessionId ?: return
+        val shape = outline ?: return
+        val name = generateSequence(1) { it + 1 }.map { "Neue Strecke $it" }.first { n -> tracks.none { it.name == n } }
+        val id = db("create track") { repo.createTrack(name, shape) } ?: return
+        db("assign track") { repo.assignTrack(session, id) }
+        trackId = id
+        _trackNotice.value = TrackNotice(id, name, isNew = true)
+        loadTrackLine()
+        loadReference()
+        _tracksVersion.value++
     }
 
     fun renameTrack(id: Long, name: String) = withState {
@@ -370,6 +369,7 @@ class SessionController(
     fun deleteTrack(id: Long) = withState {
         db("delete track") { repo.deleteTrack(id) }
         if (carryTrack?.first == id) carryTrack = null
+        if (_trackNotice.value?.trackId == id) _trackNotice.value = null
         if (trackId == id) {
             trackId = null
             outline = null

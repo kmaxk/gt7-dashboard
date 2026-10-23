@@ -92,10 +92,6 @@ fun App(
             val reloadCars: () -> Unit = {
                 scope.launch { cars = carList.withCustom(withContext(Dispatchers.Default) { repo.carNames() }) }
             }
-            val question by controller.trackQuestion.collectAsState()
-            question?.let {
-                TrackDialog(it, onConfirm = controller::confirmTrack, onReject = controller::rejectSuggestion, onName = controller::nameTrack)
-            }
             var tabsExpanded by remember { mutableStateOf(false) }
             val sessionOverview = remember { SessionOverviewState() }
             // Android draws edge to edge: keep clear of status bar, navigation bar and camera cutout (all zero on the desktop)
@@ -153,6 +149,10 @@ fun App(
                                     unit = it
                                     scope.launch(Dispatchers.Default) { repo.setSetting("unit", it.name) }
                                 }
+                            }
+                            val trackNotice by controller.trackNotice.collectAsState()
+                            trackNotice?.let {
+                                TrackNoticeBanner(it, controller::rejectTrack, controller::dismissTrackNotice, Modifier.align(Alignment.BottomCenter).padding(8.dp))
                             }
                             // phone live view without tab row: a small button brings it back
                             if (compact && tab == 0) {

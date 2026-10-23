@@ -115,49 +115,37 @@ class SessionControllerTest {
     }
 
     @Test
-    fun unknownTrackAsksName() = runTest {
+    fun unknownTrackIsCreatedWithoutAsking() = runTest {
         val r = repo()
+        r.createTrack("Neue Strecke 1", FloatArray(2 * TrackMatcher.POINTS) { 1_000f }) // another track, far off the circle
         val c = controller(r)
         c.startSource(FakeSource(circleLaps(55f, laps = 1, extraFrames = 10), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 1) + 10) * FRAME_MS)
         runCurrent()
-        assertEquals(TrackQuestion.AskName, c.trackQuestion.value)
-        c.nameTrack("Spa")
-        runCurrent()
-        assertNull(c.trackQuestion.value)
-        val track = r.tracks().single()
-        assertEquals("Spa", track.name)
-        val session = r.sessions().first().single()
-        assertEquals(track.id, session.trackId)
+        val notice = assertNotNull(c.trackNotice.value)
+        assertEquals("Neue Strecke 2", notice.name) // a free placeholder name, renamed later in the tracks tab
+        assertTrue(notice.isNew)
+        assertEquals(notice.trackId, r.sessions().first().single().trackId)
+        c.dismissTrackNotice(); runCurrent()
+        assertNull(c.trackNotice.value)
     }
 
     @Test
-    fun knownTrackIsSuggested() = runTest {
+    fun knownTrackIsAssignedWithoutAsking() = runTest {
         val r = repo()
         val c = controller(r)
-        // session 1: fast laps (55 m/s), named "Spa"
+        // session 1: fast laps (55 m/s) on a new track
         c.startSource(FakeSource(circleLaps(55f, laps = 2, extraFrames = 5, endWithLoading = true), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 2) + 10) * FRAME_MS)
         runCurrent()
-        c.nameTrack("Spa")
-        runCurrent()
         val spa = r.tracks().single()
-        val session1Start = r.sessions().first().single().startedAtMs
 
         // session 2: same circle, slower
         c.startSource(FakeSource(circleLaps(40f, laps = 2, extraFrames = 40), { testScheduler.currentTime }))
         val lap1Frames = framesFor(laps = 1, speedMps = 40f)
         advanceTimeBy((lap1Frames + 5) * FRAME_MS)
         runCurrent()
-        val q = assertIs<TrackQuestion.Suggest>(c.trackQuestion.value)
-        assertEquals(spa, q.track)
-        assertEquals(session1Start, q.lastDrivenAtMs)
-        // until confirmed, the reference is session 2's own lap 1 → delta near zero
-        assertTrue(kotlin.math.abs(c.live.value.deltaMs!!) < 300, "delta ${c.live.value.deltaMs}")
-
-        c.confirmTrack()
-        runCurrent()
-        assertNull(c.trackQuestion.value)
+        assertEquals(TrackNotice(spa.id, spa.name, isNew = false), c.trackNotice.value)
         // halfway through lap 2: reference is now session 1's best (55 m/s) → we are clearly slower
         advanceTimeBy(lap1Frames / 2 * FRAME_MS)
         runCurrent()
@@ -200,20 +188,20 @@ class SessionControllerTest {
     }
 
     @Test
-    fun rejectSuggestionAsksName() = runTest {
+    fun rejectedTrackIsReplacedByANewOne() = runTest {
         val r = repo()
         val spa = r.createTrack("Spa", TrackMatcher.outlineOf(oneLapSamples()))
         val c = controller(r)
         c.startSource(FakeSource(circleLaps(55f, laps = 1, extraFrames = 10), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 1) + 10) * FRAME_MS)
         runCurrent()
-        assertEquals(spa, assertIs<TrackQuestion.Suggest>(c.trackQuestion.value).track.id)
-        c.rejectSuggestion()
+        assertEquals(spa, c.trackNotice.value?.trackId)
+        c.rejectTrack()
         runCurrent()
-        assertEquals(TrackQuestion.AskName, c.trackQuestion.value)
-        c.nameTrack("Spa 2")
-        runCurrent()
-        assertEquals(listOf("Spa", "Spa 2"), r.tracks().map { it.name })
+        val created = r.tracks().single { it.id == r.sessions().first().single().trackId }
+        assertEquals("Neue Strecke 1", created.name)
+        assertEquals(TrackNotice(created.id, created.name, isNew = true), c.trackNotice.value)
+        assertEquals(2, r.tracks().size)
     }
 
     @Test
@@ -292,14 +280,13 @@ class SessionControllerTest {
         runCurrent()
     }
 
-    /** Anna drives two laps at 55 m/s on a new track "Spa"; afterwards "Fahrer 1" is active again. */
+    /** Anna drives two laps at 55 m/s on a new track; afterwards "Fahrer 1" is active again. */
     private fun TestScope.annaSetsSpa(c: SessionController, r: SessionRepository): de.bavaco.gt7.storage.Driver {
         runCurrent()
         c.createDriver("Anna"); runCurrent()
         val anna = c.drivers.value.single { it.name == "Anna" }
         c.selectDriver(anna.id); runCurrent()
         driveSession(c, 55f, laps = 2)
-        c.nameTrack("Spa"); runCurrent()
         c.selectDriver(r.ensureDefaultDriver().id); runCurrent()
         return anna
     }
@@ -323,7 +310,6 @@ class SessionControllerTest {
         c.startSource(FakeSource(circleLaps(55f, laps = 4, extraFrames = 5), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 1) + 10) * FRAME_MS)
         runCurrent()
-        c.nameTrack("Spa"); runCurrent()
         val spa = r.tracks().single()
         c.createDriver("Anna"); runCurrent()
         c.selectDriver(c.drivers.value.single { it.name == "Anna" }.id)
@@ -333,7 +319,7 @@ class SessionControllerTest {
         assertEquals(2, sessions.size)
         assertEquals("Anna", sessions.first().driverName)
         assertEquals(spa.id, sessions.first().trackId)
-        assertNull(c.trackQuestion.value)
+        assertNull(c.trackNotice.value)
     }
 
     @Test
@@ -345,8 +331,7 @@ class SessionControllerTest {
         c.startSource(FakeSource(circleLaps(40f, laps = 2, extraFrames = 40), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 1, speedMps = 40f) + 5) * FRAME_MS)
         runCurrent()
-        assertIs<TrackQuestion.Suggest>(c.trackQuestion.value)
-        c.confirmTrack(); runCurrent()
+        assertNotNull(c.trackNotice.value)
         val ref = assertNotNull(c.reference.value)
         assertEquals("Anna", ref.owner.name)
         assertEquals(false, ref.isSelf)
@@ -364,7 +349,6 @@ class SessionControllerTest {
         c.startSource(FakeSource(circleLaps(60f, laps = 3, extraFrames = 40), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 1, speedMps = 60f) + 5) * FRAME_MS)
         runCurrent()
-        c.confirmTrack(); runCurrent()
         advanceTimeBy(framesFor(laps = 2, speedMps = 60f) * FRAME_MS)
         runCurrent()
         assertEquals("Anna", c.reference.value?.owner?.name)
@@ -385,7 +369,6 @@ class SessionControllerTest {
         c.startSource(FakeSource(circleLaps(55f, laps = 2, extraFrames = 40), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 1) + 5) * FRAME_MS)
         runCurrent()
-        c.nameTrack("Spa"); runCurrent()
         advanceTimeBy(framesFor(laps = 1) * FRAME_MS)
         runCurrent()
         assertNull(c.reference.value)
@@ -411,7 +394,6 @@ class SessionControllerTest {
         c.startSource(FakeSource(circleLaps(55f, laps = 1, extraFrames = 10), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 1) + 10) * FRAME_MS)
         runCurrent()
-        c.nameTrack("Spa"); runCurrent()
         // still in the session (no timeout yet) when Anna takes over; then GT7 loads another track
         c.createDriver("Anna"); runCurrent()
         c.selectDriver(c.drivers.value.single { it.name == "Anna" }.id); runCurrent()
@@ -432,7 +414,6 @@ class SessionControllerTest {
         c.startSource(FakeSource(circleLaps(55f, laps = 4, extraFrames = 5), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 1) + 10) * FRAME_MS)
         runCurrent()
-        c.nameTrack("Spa"); runCurrent()
         assertNotNull(c.trackLine.value)
         c.createDriver("Anna"); runCurrent()
         c.selectDriver(c.drivers.value.single { it.name == "Anna" }.id)
@@ -484,7 +465,7 @@ class SessionControllerTest {
         assertTrue(line.size > 100)
         // check the live state first: sessions() delivers on a real thread, and while the test waits for it
         // runTest moves the virtual clock on, so the fake source would finish the lap and the question would come
-        assertNull(c.trackQuestion.value)
+        assertNull(c.trackNotice.value)
         assertNull(r.sessions().first().first().trackId) // only shown, not assigned before the lap
     }
 
@@ -496,7 +477,6 @@ class SessionControllerTest {
         c.startSource(FakeSource(circleLaps(55f, laps = 3, extraFrames = 5), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 1) + 10) * FRAME_MS)
         runCurrent()
-        c.nameTrack("Spa"); runCurrent()
         assertNotNull(c.trackLine.value)
         val v = c.tracksVersion.value
         c.deleteTrack(r.tracks().single().id); runCurrent()
@@ -542,7 +522,6 @@ class SessionControllerTest {
         c.startSource(FakeSource(circleLaps(50f, laps = 3, extraFrames = 5, endWithLoading = true), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 1, speedMps = 50f) + 5) * FRAME_MS)
         runCurrent()
-        c.confirmTrack(); runCurrent()
         advanceTimeBy((framesFor(laps = 2, speedMps = 50f) + 10) * FRAME_MS)
         runCurrent()
         val slow = r.sessions().first().first { it.driverName == "Fahrer 1" }
@@ -553,7 +532,6 @@ class SessionControllerTest {
         c.startSource(FakeSource(circleLaps(60f, laps = 3, extraFrames = 40), { testScheduler.currentTime }))
         advanceTimeBy((framesFor(laps = 1, speedMps = 60f) + 5) * FRAME_MS)
         runCurrent()
-        c.confirmTrack(); runCurrent()
         advanceTimeBy(framesFor(laps = 2, speedMps = 60f) * FRAME_MS)
         runCurrent()
         assertEquals(marked.timeMs, c.reference.value?.timeMs)
