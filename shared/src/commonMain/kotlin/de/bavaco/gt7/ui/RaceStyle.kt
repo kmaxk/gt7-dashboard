@@ -50,7 +50,7 @@ fun RaceLabel(text: String, modifier: Modifier = Modifier, color: Color = RaceCo
     Text(
         text.uppercase(),
         modifier,
-        style = TextStyle(fontFamily = raceFontFamily(), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.14.em),
+        style = TextStyle(fontFamily = raceFontFamily(), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.14.em),
         color = color,
         maxLines = 1,
     )

@@ -60,8 +60,8 @@ fun markerLabel(number: Int): String = "T$number"
 data class ChartOverlay(val markers: List<Pair<Int, Float>> = emptyList(), val shade: ClosedFloatingPointRange<Float>? = null)
 
 private val Grid = RaceColors.Line
-private val Label = TextStyle(color = RaceColors.TextMuted, fontSize = 11.sp)
-private val MarkerLabel = TextStyle(color = RaceColors.TextPrimary.copy(alpha = 0.67f), fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+private val Label = TextStyle(color = RaceColors.TextMuted, fontSize = 13.sp)
+private val MarkerLabel = TextStyle(color = RaceColors.TextPrimary.copy(alpha = 0.67f), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
 private val Marker = RaceColors.TextPrimary.copy(alpha = 0.25f)
 private val Shade = RaceColors.TextPrimary.copy(alpha = 0.12f)
 private val Cursor = RaceColors.TextPrimary.copy(alpha = 0.8f)

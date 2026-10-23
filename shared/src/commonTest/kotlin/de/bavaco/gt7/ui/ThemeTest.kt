@@ -16,6 +16,10 @@ class ThemeTest {
         assertEquals(Color(0xFFFFD400), RaceColors.LapA)
         assertEquals(Color(0xFF00D2FF), RaceColors.LapB)
         assertEquals(Color(0xFFB14CFF), RaceColors.Best)
-        assertEquals(Color(0xFFE10600), RaceColors.Accent)
+        assertEquals(Color(0xFFFF9800), RaceColors.Accent)
+        assertEquals(Color(0xFFE10600), RaceColors.Loss)
+        // orange is too light for white text
+        assertEquals(RaceColors.Carbon, scheme.onPrimary)
+        assertEquals(RaceColors.Carbon, scheme.onSecondaryContainer)
     }
 }

@@ -25,7 +25,10 @@ import gt7dashboard.shared.generated.resources.barlow_condensed_regular
 import gt7dashboard.shared.generated.resources.barlow_condensed_semibold
 import org.jetbrains.compose.resources.Font
 
-/** The motorsport palette: carbon black, red accent, yellow/cyan for laps A/B, violet for best values. */
+/**
+ * The motorsport palette: carbon black, orange for everything you can pick or press, yellow/cyan for laps A/B,
+ * violet for best values. Red only means loss or alarm, so it never doubles as decoration.
+ */
 object RaceColors {
     val Carbon = Color(0xFF0A0A0A)
     val Surface = Color(0xFF141414)
@@ -33,15 +36,14 @@ object RaceColors {
     val Line = Color(0xFF262626)
     val TextPrimary = Color(0xFFF2F2F2)
     val TextMuted = Color(0xFF9A9A9A)
-    val Accent = Color(0xFFE10600)
+    /** Selected tabs, chips and switches, filled buttons, sliders; text on it is [Carbon]. */
+    val Accent = Color(0xFFFF9800)
     val LapA = Color(0xFFFFD400)
     val LapB = Color(0xFF00D2FF)
     val Loss = Color(0xFFE10600)
     val Gain = Color(0xFF00E676)
     val Best = Color(0xFFB14CFF)
     val Warn = Color(0xFFFFC107)
-    /** The selected menu tab: orange reads better on carbon than the red accent. */
-    val Menu = Color(0xFFFF9800)
     /** Switched-off lamps and LEDs of the race display. */
     val Dim = Color(0xFF3A3A3A)
     /** Faint stripes of the carbon background. */
@@ -58,7 +60,7 @@ val LapBColor = RaceColors.LapB
 
 fun raceColorScheme(): ColorScheme = darkColorScheme(
     primary = RaceColors.Accent,
-    onPrimary = RaceColors.TextPrimary,
+    onPrimary = RaceColors.Carbon,
     secondary = RaceColors.LapB,
     background = RaceColors.Carbon,
     onBackground = RaceColors.TextPrimary,
@@ -69,7 +71,7 @@ fun raceColorScheme(): ColorScheme = darkColorScheme(
     surfaceContainer = RaceColors.Surface,
     surfaceContainerHigh = RaceColors.SurfaceRaised,
     secondaryContainer = RaceColors.Accent,
-    onSecondaryContainer = RaceColors.TextPrimary,
+    onSecondaryContainer = RaceColors.Carbon,
     outline = RaceColors.Line,
     outlineVariant = RaceColors.Line,
     error = RaceColors.Loss,

@@ -108,13 +108,13 @@ fun App(
                                 TABS.forEachIndexed { i, title ->
                                     Tab(
                                         selected = tab == i, onClick = { tab = i; tabsExpanded = false },
-                                        selectedContentColor = RaceColors.Menu, unselectedContentColor = RaceColors.TextPrimary,
+                                        selectedContentColor = RaceColors.Accent, unselectedContentColor = RaceColors.TextPrimary,
                                         text = { Text(title, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, maxLines = 1) },
                                     )
                                 }
                             }
                             val indicator: @Composable TabIndicatorScope.() -> Unit = {
-                                TabRowDefaults.PrimaryIndicator(Modifier.tabIndicatorOffset(tab, matchContentSize = true), width = Dp.Unspecified, color = RaceColors.Menu)
+                                TabRowDefaults.PrimaryIndicator(Modifier.tabIndicatorOffset(tab, matchContentSize = true), width = Dp.Unspecified, color = RaceColors.Accent)
                             }
                             if (compact) PrimaryScrollableTabRow(selectedTabIndex = tab, indicator = indicator, tabs = tabs)
                             else PrimaryTabRow(selectedTabIndex = tab, indicator = indicator, tabs = tabs)

@@ -17,8 +17,8 @@ import de.bavaco.gt7.session.Corner
 import de.bavaco.gt7.session.LapSample
 
 private val Zone = RaceColors.TextPrimary.copy(alpha = 0.35f)
-private val CornerNumber = TextStyle(color = RaceColors.TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-private val SelectedNumber = CornerNumber
+private val CornerNumber = TextStyle(color = RaceColors.TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+private val SelectedNumber = CornerNumber.copy(color = RaceColors.Carbon)
 private val DotRing = RaceColors.Carbon
 
 /** The chosen corner's zone under lap A; drawn before the lap line so the line stays on top. */
@@ -36,7 +36,7 @@ fun DrawScope.drawCornerZone(projection: MapProjection, a: List<LapSample>, corn
 
 /** Corner numbers beside lap A's apexes, and the dots of A and B at the cursor or during playback. */
 fun DrawScope.drawMapMarks(projection: MapProjection, a: List<LapSample>, corners: List<Corner>, viewport: AnalysisViewport?, measurer: TextMeasurer) {
-    val radius = 7.dp.toPx()
+    val radius = 8.dp.toPx()
     for (c in corners) {
         val s = sampleAt(a, c.apexM, AxisMode.DISTANCE) ?: continue
         val (x, y) = projection.map(s.x, s.z)

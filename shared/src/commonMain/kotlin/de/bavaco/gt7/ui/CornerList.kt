@@ -168,11 +168,11 @@ private fun CornerRow(
     r: CornerReport, all: List<CornerReport>, costly: Boolean, selected: Boolean, compact: Boolean, language: TipLanguage,
     modifier: Modifier, onClick: () -> Unit,
 ) {
-    val numbers = digits(13.sp, raceFontFamily()).copy(fontWeight = FontWeight.SemiBold)
+    val numbers = digits(16.sp, raceFontFamily()).copy(fontWeight = FontWeight.SemiBold)
     Column(modifier.fillMaxWidth().background(if (selected) RaceColors.SurfaceRaised else Color.Transparent).clickable(onClick = onClick)) {
         Row(Modifier.padding(horizontal = 4.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(markerLabel(r.corner.number), style = numbers, modifier = Modifier.width(34.dp))
-            Box(Modifier.size(6.dp).clip(CircleShape).background(if (costly) RaceColors.Accent else Color.Transparent))
+            Box(Modifier.size(6.dp).clip(CircleShape).background(if (costly) RaceColors.Loss else Color.Transparent))
             Spacer(Modifier.width(8.dp))
             if (compact) {
                 Text(
