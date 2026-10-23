@@ -128,13 +128,13 @@ fun SlipDot(slip: Float?, scale: Float) {
     val blink = blinkAlpha().value
     val alert = isSlipAlert(slip)
     val color = if (alert) BadRed.copy(alpha = blink) else if (slip == null) Panel else GoodGreen.copy(alpha = 0.5f)
-    Box(Modifier.size(24.dp * scale).clip(CircleShape).background(color))
+    Box(Modifier.size(16.dp * scale).clip(CircleShape).background(color))
 }
 
 @Composable
 fun TireCell(tempC: Float, slip: Float?, scale: Float) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp * scale)) {
         SlipDot(slip, scale)
-        Text("${tempC.toInt()}°", style = digits(64.sp * scale))
+        Text("${tempC.toInt()}°", style = digits(36.sp * scale))
     }
 }

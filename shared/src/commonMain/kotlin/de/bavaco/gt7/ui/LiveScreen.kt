@@ -177,14 +177,16 @@ fun LiveDashboard(
                             Label("REIFEN °C", m)
                             val t = f?.tireTempC
                             val slip = state.slip
-                            // one column per side, so a three-digit front left does not push the right side out of line
-                            Row(horizontalArrangement = Arrangement.spacedBy(28.dp * m)) {
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp * m)) {
-                                    TireCell(t?.fl ?: 0f, slip.getOrNull(0), m); TireCell(t?.rl ?: 0f, slip.getOrNull(2), m)
-                                }
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp * m)) {
-                                    TireCell(t?.fr ?: 0f, slip.getOrNull(1), m); TireCell(t?.rr ?: 0f, slip.getOrNull(3), m)
-                                }
+                            Row(horizontalArrangement = Arrangement.spacedBy(36.dp * m)) {
+                                TireCell(t?.fl ?: 0f, slip.getOrNull(0), m); TireCell(t?.fr ?: 0f, slip.getOrNull(1), m)
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(36.dp * m)) {
+                                TireCell(t?.rl ?: 0f, slip.getOrNull(2), m); TireCell(t?.rr ?: 0f, slip.getOrNull(3), m)
+                            }
+                            // boost sits under the tyres so the pedal trace keeps its width next to the side panel
+                            if (f?.hasTurbo == true) {
+                                Label("LADEDRUCK", m)
+                                Text("${formatDecimal(f.boostBar, 2)} bar", style = digits(30.sp * m))
                             }
                         }
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp * m)) {
@@ -198,19 +200,10 @@ fun LiveDashboard(
                                     Text(state.fuelLapsRemaining?.let { formatDecimal(it, 1) } ?: "–", style = digits(34.sp * m))
                                 }
                             }
-                            Row(horizontalArrangement = Arrangement.spacedBy(36.dp * m)) {
-                                Column(verticalArrangement = Arrangement.spacedBy(6.dp * m)) {
-                                    Label("ZIEL", m)
-                                    val margin = state.fuelMarginLaps
-                                    Text(fuelMarginText(margin), style = digits(34.sp * m), color = if (margin == null) Color.Gray else if (margin >= 0f) GoodGreen else BadRed)
-                                }
-                                // next to the fuel target: under the large tyre temperatures there is no room left
-                                if (f?.hasTurbo == true) {
-                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp * m)) {
-                                        Label("LADEDRUCK", m)
-                                        Text("${formatDecimal(f.boostBar, 2)} bar", style = digits(34.sp * m))
-                                    }
-                                }
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp * m)) {
+                                Label("ZIEL", m)
+                                val margin = state.fuelMarginLaps
+                                Text(fuelMarginText(margin), style = digits(34.sp * m), color = if (margin == null) Color.Gray else if (margin >= 0f) GoodGreen else BadRed)
                             }
                         }
                     }
