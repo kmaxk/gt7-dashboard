@@ -11,6 +11,7 @@ private const val MAX_STEP_MS = 100L
 private const val LAST_LAP_WAIT_MS = 2_000L
 private const val MAX_TIME_MISMATCH_MS = 2_000
 private const val SAMPLE_INTERVAL_MS = 100
+private const val BREAK_CONFIRM_MS = 500L
 
 /**
  * Turns telemetry frames into sessions, laps and a live state. Not thread-safe: one caller feeds
@@ -32,6 +33,7 @@ class SessionEngine {
     private var currentLap = 0
     private val validFuelUsed = mutableListOf<Float>()
     private var pending: PendingLap? = null
+    private var breakSinceMs: Long? = null
 
     // current lap state
     private var lapStartObserved = false
@@ -48,10 +50,14 @@ class SessionEngine {
 
     fun onFrame(frame: TelemetryFrame, atMs: Long): List<SessionEvent> {
         val events = mutableListOf<SessionEvent>()
-        if (active && (frame.loading || frame.carCode != carCode)) end(atMs, events)
+        // GT7 sends single loading or foreign-car frames mid-race: only a lasting break ends the session
+        val breaking = active && (frame.loading || frame.carCode != carCode)
+        val since = if (breaking) breakSinceMs ?: atMs else null
+        breakSinceMs = since
+        if (since != null && atMs - since >= BREAK_CONFIRM_MS) end(atMs, events)
         if (!active) {
             if (frame.onTrack && !frame.loading) start(frame, atMs, events)
-        } else {
+        } else if (since == null) {
             advance(frame, atMs, events)
         }
         publish(frame)
@@ -97,6 +103,7 @@ class SessionEngine {
         pending?.let { events += finalizeFallback(it) }
         pending = null
         active = false
+        breakSinceMs = null
         events += SessionEvent.Ended(atMs)
     }
 

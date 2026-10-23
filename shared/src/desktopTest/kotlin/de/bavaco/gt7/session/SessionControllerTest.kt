@@ -54,7 +54,7 @@ class SessionControllerTest {
     /**
      * Drives a circle of RADIUS_M at [speedMps]: PRE_FRAMES standing on lap 0, then [laps] full laps
      * (lap increments with lastLapMs = frames × FRAME_MS), then [extraFrames] into the next lap,
-     * optionally followed by a loading frame that ends the session. Pick speeds whose consecutive laps
+     * optionally followed by loading frames that end the session. Pick speeds whose consecutive laps
      * differ in frame count: the engine treats a repeated lastLapMs as "not yet updated" (lap invalid).
      */
     private fun circleLaps(speedMps: Float, laps: Int, extraFrames: Int, endWithLoading: Boolean = false): List<ByteArray> {
@@ -80,7 +80,8 @@ class SessionControllerTest {
                 speed = if (driving) speedMps else 0f, lap = lap, lastLapMs = lastLapMs, loading = false,
             )
         }
-        if (endWithLoading) out += packet(PRE_FRAMES + drivingFrames + 1, 0f, 0f, 0f, lap, lastLapMs, loading = true)
+        // 0.5 s of loading: a single loading frame is taken as a glitch
+        if (endWithLoading) repeat(6) { out += packet(PRE_FRAMES + drivingFrames + 1 + it, 0f, 0f, 0f, lap, lastLapMs, loading = true) }
         return out
     }
 

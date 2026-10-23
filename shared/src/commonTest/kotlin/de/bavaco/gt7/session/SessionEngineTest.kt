@@ -20,6 +20,7 @@ class SessionEngineTest {
         var speedMps = 50f
         var fuel = 50f
         var paused = false
+        var loading = false
         var carCode = 7
         private var lapStartT = 0L
 
@@ -71,7 +72,7 @@ class SessionEngineTest {
             val out = engine.onFrame(
                 frame(
                     packetId = packetId, speedMps = speedMps, fuelLevel = fuel, currentLap = lap,
-                    lastLapMs = lastLapMs, carCode = carCode, paused = paused,
+                    lastLapMs = lastLapMs, carCode = carCode, paused = paused, loading = loading,
                 ),
                 t,
             )
@@ -223,8 +224,41 @@ class SessionEngineTest {
         d.step()
         d.drive(500)
         d.carCode = 8
-        val out = d.step()
+        assertEquals(emptyList(), d.step())
+        d.drive(400)
+        val out = d.step(100)
         assertEquals(listOf(SessionEvent.Ended(d.t), SessionEvent.Started(8, d.t)), out)
+    }
+
+    @Test
+    fun lastingLoadingEndsSession() {
+        val d = driverInLap2()
+        d.drive(500)
+        d.loading = true
+        d.drive(480)
+        assertTrue(d.engine.live.value.sessionActive)
+        d.step(50)
+        assertEquals(SessionEvent.Ended(d.t), d.events.last())
+        assertFalse(d.engine.live.value.sessionActive)
+    }
+
+    @Test
+    fun glitchFramesInRaceKeepSessionAndLap() {
+        val d = driverInLap2()
+        d.drive(2000)
+        d.loading = true
+        d.step()
+        d.loading = false
+        d.drive(2000)
+        d.carCode = 8
+        d.step()
+        d.carCode = 7
+        d.drive(2000)
+        val measured = d.nextLap()
+        assertTrue(d.events.none { it is SessionEvent.Ended })
+        val lap = d.completed.single { it.number == 2 }
+        assertTrue(lap.isValid)
+        assertEquals(measured, lap.measuredMs)
     }
 
     @Test
