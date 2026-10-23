@@ -31,6 +31,7 @@ class MigrationTest {
                 old.execute(null, "INSERT INTO session(car_code, started_at_ms) VALUES (1, 1000)", 0)
                 old.execute(null, "INSERT INTO session(car_code, started_at_ms) VALUES (2, 2000)", 0)
                 old.execute(null, "INSERT INTO lap(session_id, number, time_ms, measured_ms, fuel_used, is_valid) VALUES (1, 1, 100000, 100000, 4.5, 1)", 0)
+                old.execute(null, "INSERT INTO lap_sample(lap_id, time_ms, distance_m, speed_mps, throttle, brake, gear, rpm, x, z, boost_bar) VALUES (1, 0, 0, 50, 1, 0, 4, 7000, 1, 2, 0)", 0)
                 old.execute(null, "PRAGMA user_version = 1", 0)
             }
             JdbcSqliteDriver(url, Properties(), Gt7Database.Schema).use { migrated ->
@@ -40,7 +41,7 @@ class MigrationTest {
                 assertEquals(listOf(1L, 1L), sessions.map { it.driverId })
                 assertEquals(1, repo.laps(1).size)
                 val version = migrated.executeQuery(null, "PRAGMA user_version", { c -> c.next(); app.cash.sqldelight.db.QueryResult.Value(c.getLong(0)) }, 0).value
-                assertEquals(5L, version)
+                assertEquals(6L, version)
                 // migration 2: tracks gain an optional line lap
                 val t = repo.createTrack("Ring", floatArrayOf(0f))
                 assertEquals(listOf(null), repo.trackSummaries().map { it.lineLapId })
@@ -57,6 +58,10 @@ class MigrationTest {
                 repo.setReferenceLap(1, true)
                 assertEquals("Alt", repo.sessions().first().first { it.id == 1L }.name)
                 assertEquals(listOf(true), repo.laps(1).map { it.isReference })
+                // migration 5: samples gain steering, yaw rate, accelerations and slip, empty for old laps
+                val old = repo.samples(1).single()
+                assertEquals(50f, old.speedMps)
+                assertEquals(listOf<Float?>(null, null, null, null, null, null), listOf(old.steeringRad, old.yawRate, old.latAccel, old.longAccel, old.slipFront, old.slipRear))
             }
         } finally {
             file.deleteIfExists()

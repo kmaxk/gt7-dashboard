@@ -13,6 +13,14 @@ data class LapSample(
     val x: Float,
     val z: Float,
     val boostBar: Float,
+    /** Steering wheel angle in rad, rotation in rad/s, accelerations in m/s²: packet type B, null for older laps. */
+    val steeringRad: Float? = null,
+    val yawRate: Float? = null,
+    val latAccel: Float? = null,
+    val longAccel: Float? = null,
+    /** Mean wheel slip of the axle (0.2 = 20 % faster than the road), null below walking pace. */
+    val slipFront: Float? = null,
+    val slipRear: Float? = null,
 )
 
 data class CompletedLap(

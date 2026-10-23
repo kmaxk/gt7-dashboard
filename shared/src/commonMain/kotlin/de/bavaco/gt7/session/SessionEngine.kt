@@ -174,11 +174,18 @@ class SessionEngine {
         val timeMs = lapMeasuredMs.toInt()
         val last = lapSamples.lastOrNull()
         if (last != null && timeMs - last.timeMs < SAMPLE_INTERVAL_MS) return
+        val w = frame.wheelRps
+        val r = frame.tireRadiusM
         lapSamples += LapSample(
             timeMs, lapDistanceM, frame.speedMps, frame.throttle, frame.brake, frame.gear, frame.rpm,
             frame.x, frame.z, frame.boostBar,
+            frame.steeringRad, frame.yawRate, frame.latAccel, frame.longAccel,
+            axleSlip(wheelSlip(w.fl, r.fl, frame.speedMps), wheelSlip(w.fr, r.fr, frame.speedMps)),
+            axleSlip(wheelSlip(w.rl, r.rl, frame.speedMps), wheelSlip(w.rr, r.rr, frame.speedMps)),
         )
     }
+
+    private fun axleSlip(left: Float?, right: Float?): Float? = if (left == null || right == null) null else (left + right) / 2
 
     private fun remember(frame: TelemetryFrame, atMs: Long) {
         lastFrameAtMs = atMs

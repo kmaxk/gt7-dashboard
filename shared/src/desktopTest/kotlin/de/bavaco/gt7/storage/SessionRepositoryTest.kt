@@ -20,6 +20,18 @@ class SessionRepositoryTest {
 
     private fun sample(t: Int) = LapSample(t, t * 0.5f, 30f + t, 0.5f, 0.25f, 3, 6000f, t * 1.5f, -t * 2f, 0.75f)
 
+    @Test
+    fun savesAndLoadsDynamics() {
+        val r = repo()
+        val s = r.createSession(r.createDriver("Max"), 1, 0L)
+        val samples = listOf(
+            LapSample(0, 0f, 50f, 1f, 0f, 4, 7000f, 1f, 2f, 0f, steeringRad = 0.3f, yawRate = -0.5f, latAccel = 12f, longAccel = -3f, slipFront = 0.01f, slipRear = 0.2f),
+            LapSample(100, 5f, 50f, 1f, 0f, 4, 7000f, 1f, 2f, 0f),
+        )
+        val id = r.saveLap(s, CompletedLap(1, 90_000, 90_000, 4f, true, samples))
+        assertEquals(samples, r.samples(id))
+    }
+
     private fun lap(n: Int, timeMs: Int, valid: Boolean = true, tag: Int = 0) =
         CompletedLap(n, timeMs, timeMs, 4.5f, valid, listOf(sample(tag), sample(tag + 100), sample(tag + 200)))
 

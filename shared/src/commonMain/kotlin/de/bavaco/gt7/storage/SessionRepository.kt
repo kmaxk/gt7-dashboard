@@ -81,6 +81,8 @@ class SessionRepository(private val db: Gt7Database) {
             q.insertSample(
                 lapId, s.timeMs.toLong(), s.distanceM.toDouble(), s.speedMps.toDouble(), s.throttle.toDouble(),
                 s.brake.toDouble(), s.gear.toLong(), s.rpm.toDouble(), s.x.toDouble(), s.z.toDouble(), s.boostBar.toDouble(),
+                s.steeringRad?.toDouble(), s.yawRate?.toDouble(), s.latAccel?.toDouble(), s.longAccel?.toDouble(),
+                s.slipFront?.toDouble(), s.slipRear?.toDouble(),
             )
         }
         lapId
@@ -184,6 +186,8 @@ class SessionRepository(private val db: Gt7Database) {
         LapSample(
             it.time_ms.toInt(), it.distance_m.toFloat(), it.speed_mps.toFloat(), it.throttle.toFloat(), it.brake.toFloat(),
             it.gear.toInt(), it.rpm.toFloat(), it.x.toFloat(), it.z.toFloat(), it.boost_bar.toFloat(),
+            it.steering_rad?.toFloat(), it.yaw_rate?.toFloat(), it.lat_accel?.toFloat(), it.long_accel?.toFloat(),
+            it.slip_front?.toFloat(), it.slip_rear?.toFloat(),
         )
     }
 

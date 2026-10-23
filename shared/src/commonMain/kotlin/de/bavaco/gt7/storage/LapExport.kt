@@ -15,7 +15,12 @@ data class LapMeta(
     val valid: Boolean,
 )
 
-private val COLUMNS = listOf("time_ms", "distance_m", "speed_kmh", "throttle_pct", "brake_pct", "gear", "rpm", "x", "z", "boost_bar")
+private val COLUMNS = listOf(
+    "time_ms", "distance_m", "speed_kmh", "throttle_pct", "brake_pct", "gear", "rpm", "x", "z", "boost_bar",
+    "steering_deg", "yaw_deg_s", "lat_g", "long_g", "slip_front_pct", "slip_rear_pct",
+)
+private const val DEG_PER_RAD = 57.29578f
+private const val G = 9.81f
 
 /** Fixed decimals with a dot, independent of the locale. */
 private fun fixed(value: Float, decimals: Int): String {
@@ -27,15 +32,19 @@ private fun fixed(value: Float, decimals: Int): String {
     return "$sign${scaled / scale}.${(scaled % scale).toString().padStart(decimals, '0')}"
 }
 
-private fun values(s: LapSample): List<String> = listOf(
+private fun values(s: LapSample): List<String?> = listOf(
     "${s.timeMs}", fixed(s.distanceM, 2), fixed(s.speedMps * 3.6f, 1), fixed(s.throttle * 100f, 1), fixed(s.brake * 100f, 1),
     "${s.gear}", fixed(s.rpm, 0), fixed(s.x, 2), fixed(s.z, 2), fixed(s.boostBar, 2),
+    s.steeringRad?.let { fixed(it * DEG_PER_RAD, 1) }, s.yawRate?.let { fixed(it * DEG_PER_RAD, 1) },
+    s.latAccel?.let { fixed(it / G, 2) }, s.longAccel?.let { fixed(it / G, 2) },
+    s.slipFront?.let { fixed(it * 100f, 1) }, s.slipRear?.let { fixed(it * 100f, 1) },
 )
 
 /** One line per sample under a header; speeds in km/h, pedals in percent. */
 fun lapCsv(samples: List<LapSample>): String = buildString {
     append(COLUMNS.joinToString(",")).append('\n')
-    for (s in samples) append(values(s).joinToString(",")).append('\n')
+    // a value the lap does not have stays an empty field
+    for (s in samples) append(values(s).joinToString(",") { it ?: "" }).append('\n')
 }
 
 private fun jsonString(text: String?): String {
@@ -66,7 +75,7 @@ fun lapJson(meta: LapMeta, samples: List<LapSample>): String = buildString {
     append(",\"samples\":[")
     samples.forEachIndexed { i, s ->
         if (i > 0) append(',')
-        append(COLUMNS.zip(values(s)).joinToString(",", "{", "}") { (k, v) -> "\"$k\":$v" })
+        append(COLUMNS.zip(values(s)).joinToString(",", "{", "}") { (k, v) -> "\"$k\":${v ?: "null"}" })
     }
     append("]}")
 }

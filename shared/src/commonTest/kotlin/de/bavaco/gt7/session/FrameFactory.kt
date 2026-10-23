@@ -35,8 +35,13 @@ fun frame(
     paused: Boolean = false,
     loading: Boolean = false,
     hasTurbo: Boolean = false,
+    steeringRad: Float? = null,
+    yawRate: Float? = null,
+    latAccel: Float? = null,
+    longAccel: Float? = null,
 ) = TelemetryFrame(
     packetId, x, y, z, speedMps, rpm, rpmAlertMin, rpmAlertMax, gear, suggestedGear, throttle, brake, boostBar,
     fuelLevel, fuelCapacity, tireTempC, wheelRps, tireRadiusM, currentLap, totalLaps, bestLapMs, lastLapMs,
     racePosition, totalPositions, carCode, onTrack, paused, loading, hasTurbo,
+    steeringRad = steeringRad, yawRate = yawRate, latAccel = latAccel, longAccel = longAccel,
 )

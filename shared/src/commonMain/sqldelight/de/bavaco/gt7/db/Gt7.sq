@@ -58,7 +58,14 @@ CREATE TABLE lap_sample (
     rpm REAL NOT NULL,
     x REAL NOT NULL,
     z REAL NOT NULL,
-    boost_bar REAL NOT NULL
+    boost_bar REAL NOT NULL,
+    -- added by migration 5; packet type B (steering, accelerations) and axle slip, null for older laps
+    steering_rad REAL,
+    yaw_rate REAL,
+    lat_accel REAL,
+    long_accel REAL,
+    slip_front REAL,
+    slip_rear REAL
 );
 
 CREATE INDEX lap_sample_lap_id ON lap_sample(lap_id);
@@ -112,8 +119,9 @@ insertLap:
 INSERT INTO lap(session_id, number, time_ms, measured_ms, fuel_used, is_valid) VALUES (?, ?, ?, ?, ?, ?);
 
 insertSample:
-INSERT INTO lap_sample(lap_id, time_ms, distance_m, speed_mps, throttle, brake, gear, rpm, x, z, boost_bar)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO lap_sample(lap_id, time_ms, distance_m, speed_mps, throttle, brake, gear, rpm, x, z, boost_bar,
+    steering_rad, yaw_rate, lat_accel, long_accel, slip_front, slip_rear)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 lastSessionStartForTrack:
 SELECT MAX(started_at_ms) FROM session WHERE track_id = ?;
@@ -198,7 +206,8 @@ lapsForSession:
 SELECT id, session_id, number, time_ms, fuel_used, is_valid, is_reference FROM lap WHERE session_id = ? ORDER BY number, id;
 
 samplesForLap:
-SELECT time_ms, distance_m, speed_mps, throttle, brake, gear, rpm, x, z, boost_bar
+SELECT time_ms, distance_m, speed_mps, throttle, brake, gear, rpm, x, z, boost_bar,
+    steering_rad, yaw_rate, lat_accel, long_accel, slip_front, slip_rear
 FROM lap_sample WHERE lap_id = ? ORDER BY id;
 
 allCarNames:

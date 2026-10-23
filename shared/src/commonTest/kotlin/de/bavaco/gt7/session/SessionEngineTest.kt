@@ -1,5 +1,6 @@
 package de.bavaco.gt7.session
 
+import de.bavaco.gt7.telemetry.Wheels
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -318,5 +319,43 @@ class SessionEngineTest {
     @Test
     fun endSessionWithoutSessionIsNoop() {
         assertTrue(SessionEngine().endSession(0).isEmpty())
+    }
+
+    /** Lap 2 driven with [speedMps] and dynamics; the rear wheels turn 20 % faster than the front ones. */
+    private fun dynamicsLap(speedMps: Float): CompletedLap {
+        val e = SessionEngine()
+        val front = 50f / 0.33f
+        fun f(id: Int, lap: Int, lastLapMs: Int = 0) = frame(
+            packetId = id, speedMps = speedMps, currentLap = lap, lastLapMs = lastLapMs, carCode = 7,
+            wheelRps = Wheels(front, front, front * 1.2f, front * 1.2f),
+            steeringRad = 0.3f, yawRate = 0.5f, latAccel = 12f, longAccel = -3f,
+        )
+        var t = 0L
+        var id = 0
+        e.onFrame(f(++id, 1), t)
+        t += 16
+        e.onFrame(f(++id, 2), t)
+        repeat(20) { t += 16; e.onFrame(f(++id, 2), t) }
+        t += 16
+        val out = e.onFrame(f(++id, 3, lastLapMs = 336), t)
+        return out.filterIsInstance<SessionEvent.LapCompleted>().single().lap
+    }
+
+    @Test
+    fun samplesCarryDynamics() {
+        val s = dynamicsLap(50f).samples.first()
+        assertEquals(0.3f, s.steeringRad)
+        assertEquals(0.5f, s.yawRate)
+        assertEquals(12f, s.latAccel)
+        assertEquals(-3f, s.longAccel)
+        assertEquals(0f, assertNotNull(s.slipFront), 0.01f)
+        assertEquals(0.2f, assertNotNull(s.slipRear), 0.01f)
+    }
+
+    @Test
+    fun slipNullBelowSlipSpeed() {
+        val s = dynamicsLap(2f).samples.first()
+        assertNull(s.slipFront)
+        assertNull(s.slipRear)
     }
 }

@@ -55,6 +55,35 @@ class DataTransferTest {
         repo.setSetting("ps5Host", "192.168.1.5")
     }
 
+    @Test fun dynamicsSurviveExportAndImport() {
+        val a = Db("a")
+        val s = a.repo.createSession(a.repo.createDriver("Max"), 1, 1_000L)
+        val withDynamics = sample(1).copy(steeringRad = 0.3f, yawRate = 0.5f, latAccel = 12f, longAccel = -3f, slipFront = 0.01f, slipRear = 0.2f)
+        a.repo.saveLap(s, CompletedLap(1, 90_000, 90_000, 4f, true, listOf(withDynamics, sample(2))))
+        val b = Db("b")
+        b.transfer.importFrom(export(a))
+        val lapId = b.repo.laps(b.sessions().single().id).single().id
+        assertEquals(listOf(withDynamics, sample(2)), b.repo.samples(lapId))
+    }
+
+    @Test fun importsExportWithoutDynamicsColumns() {
+        val file = export(filled())
+        // the sample table as it was before migration 5
+        val oldColumns = "id, lap_id, time_ms, distance_m, speed_mps, throttle, brake, gear, rpm, x, z, boost_bar"
+        JdbcSqliteDriver("jdbc:sqlite:$file").use { old ->
+            old.execute(null, "CREATE TABLE kept AS SELECT $oldColumns FROM lap_sample", 0)
+            old.execute(null, "DROP TABLE lap_sample", 0)
+            V1_SCHEMA.filter { "lap_sample" in it && "lap_session_id" !in it }.forEach { old.execute(null, it, 0) }
+            old.execute(null, "INSERT INTO lap_sample($oldColumns) SELECT $oldColumns FROM kept", 0)
+            old.execute(null, "DROP TABLE kept", 0)
+            old.execute(null, "PRAGMA user_version = 5", 0)
+        }
+        val b = Db("b")
+        assertEquals(2, b.transfer.importFrom(file).sessions)
+        val lapId = b.repo.laps(b.sessions().first { it.driverName == "Max" }.id).first().id
+        assertNull(b.repo.samples(lapId).first().steeringRad)
+    }
+
     private fun export(db: Db): String = File(dir, "export.gt7export").absolutePath.also { db.transfer.exportTo(it) }
 
     @Test fun exportThenImportCopiesEverythingButSettings() {

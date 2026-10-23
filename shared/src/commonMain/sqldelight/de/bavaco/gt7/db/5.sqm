@@ -1,0 +1,6 @@
+ALTER TABLE lap_sample ADD COLUMN steering_rad REAL;
+ALTER TABLE lap_sample ADD COLUMN yaw_rate REAL;
+ALTER TABLE lap_sample ADD COLUMN lat_accel REAL;
+ALTER TABLE lap_sample ADD COLUMN long_accel REAL;
+ALTER TABLE lap_sample ADD COLUMN slip_front REAL;
+ALTER TABLE lap_sample ADD COLUMN slip_rear REAL;
