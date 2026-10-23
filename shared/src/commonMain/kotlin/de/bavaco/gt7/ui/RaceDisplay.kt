@@ -24,11 +24,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import de.bavaco.gt7.session.LiveState
 import de.bavaco.gt7.session.Opponent
@@ -68,7 +70,7 @@ fun RaceDisplay(
         val gap = 8.dp * s
         Column(Modifier.fillMaxSize().padding(12.dp * s), verticalArrangement = Arrangement.spacedBy(gap)) {
             DriverPicker(selection, s, onSelectDriver, onSelectOpponent, onCreateDriver)
-            Row(Modifier.fillMaxWidth().height(26.dp * s), horizontalArrangement = Arrangement.spacedBy(gap)) {
+            Row(Modifier.fillMaxWidth().height(48.dp * s), horizontalArrangement = Arrangement.spacedBy(gap)) {
                 ShiftLeds(f, outsideFirst = true, s, Modifier.weight(0.37f))
                 DeltaBox(state.deltaMs, labels.deltaLabel, s, Modifier.weight(0.26f).fillMaxHeight())
                 ShiftLeds(f, outsideFirst = false, s, Modifier.weight(0.37f))
@@ -120,7 +122,7 @@ private fun ShiftLeds(f: TelemetryFrame?, outsideFirst: Boolean, scale: Float, m
 private fun DeltaBox(deltaMs: Int?, label: String, scale: Float, modifier: Modifier) {
     val color = if (deltaMs == null) Dim else if (deltaMs < 0) GoodGreen else BadRed
     Box(modifier.clip(RoundedCornerShape(2.dp * scale)).background(color), contentAlignment = Alignment.Center) {
-        Text(if (deltaMs == null) label else formatDelta(deltaMs), style = digits(20.sp * scale), color = Color.White, maxLines = 1)
+        Text(if (deltaMs == null) label else formatDelta(deltaMs), style = digits(40.sp * scale), color = Color.White, maxLines = 1)
     }
 }
 
@@ -231,7 +233,11 @@ private fun CenterStack(state: LiveState, unit: SpeedUnit, scale: Float, modifie
             verticalArrangement = Arrangement.Center,
         ) {
             val hint = gearHint(f?.gear, f?.suggestedGear ?: 15)
-            Text(gearText(f?.gear), style = digits(150.sp * scale), color = Color.White)
+            // the gear fills the panel: the font follows the space left above rpm and hint
+            BoxWithConstraints(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+                val size = with(LocalDensity.current) { min(maxHeight * 0.95f, maxWidth * 1.6f).toSp() }
+                Text(gearText(f?.gear), style = digits(size), color = Color.White, maxLines = 1, softWrap = false)
+            }
             Text(f?.rpm?.let { formatDecimal(it, 0) } ?: "–", style = digits(20.sp * scale), color = Color.White)
             Text(hint?.let { "→ $it" } ?: " ", style = digits(18.sp * scale), color = WarnAmber)
         }
